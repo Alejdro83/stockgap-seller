@@ -376,6 +376,49 @@ test("gate-2 #1: delivery error mapping — rejected vs retry vs generic", async
   assert.equal(classifyDeliveryError(new Error("something else")), null);
 });
 
+test("gate-6 #1: values cut short at ',' or ';' are invalid_request", () => {
+  for (const p of ["token_symbol: NV,DA", "token_symbol: NV;DA", "token_symbol:NVDA,TSLA"]) {
+    assert.throws(() => parseRequest(p), /bad token_symbol/, p);
+  }
+});
+
+test("gate-6 #2: suffixed tool names hit the allowlist as unknown tools", () => {
+  assert.throws(() => parseRequest("tool: get_spread-v2"), /unknown tool get_spread-v2/);
+  assert.throws(() => parseRequest("tool: get_oracle_latest.v2"), /unknown tool/);
+  assert.throws(() => parseRequest('tool: get_oracle_latest"x'), /bad tool/);
+});
+
+test("gate-6 #3: double-escaped JSON prompts parse their tool and filters", () => {
+  const dbl = '{\\\\\\"tool\\\\\\":\\\\\\"get_cross_issuer\\\\\\",\\\\\\"underlying\\\\\\":\\\\\\"NVDA\\\\\\"}';
+  assert.deepEqual(parseRequest(dbl), {
+    tool: "get_cross_issuer",
+    args: { underlying: "NVDA" },
+  });
+});
+
+test("gate-6 #4: dotted or quote-adjacent key names never select tools or filters", () => {
+  assert.deepEqual(parseRequest("meta.tool: get_oracle_latest"), {
+    tool: "get_spread",
+    args: {},
+  });
+  assert.deepEqual(parseRequest('x"tool": "get_oracle_latest"'), {
+    tool: "get_spread",
+    args: {},
+  });
+  assert.deepEqual(parseRequest("meta.underlying: NVDA tool: get_cross_issuer"), {
+    tool: "get_cross_issuer",
+    args: {},
+  });
+});
+
+test("gate-6 #5: '&' + key= is a separator, '&' glued to a symbol is not", () => {
+  assert.deepEqual(parseRequest("tool: get_cross_issuer underlying=NVDA&x=1"), {
+    tool: "get_cross_issuer",
+    args: { underlying: "NVDA" },
+  });
+  assert.throws(() => parseRequest("token_symbol: NV&DA"), /bad token_symbol/);
+});
+
 test("gate-5 #1: a filter value cut short at punctuation is invalid_request", () => {
   for (const p of [
     'token_symbol: NV"DA',

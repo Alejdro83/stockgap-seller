@@ -278,7 +278,8 @@ export function classifyUpstream(call: UpstreamCall): UpstreamStatus {
   return "upstream_error";
 }
 
-const TOOL_RE = /(?:^|[^A-Za-z0-9_-])["']?tool\\?["']?\s*[:=]\s*\\?["']?([a-z_][a-z0-9_]*)\b/i;
+const TOOL_RE =
+  /(?:^|[^A-Za-z0-9_.\\"'-])\\*["']?tool\\*["']?\s*[:=]\s*\\*["']?([^\s,;"'()\[\]{}<>&\\]*)/i;
 
 /**
  * Work prompt → tool request. Deterministic parsing only:
@@ -301,6 +302,7 @@ export function parseRequest(prompt: string): {
   const toolMatch = TOOL_RE.exec(prompt);
   let tool: StockgapTool = "get_spread";
   if (toolMatch) {
+    assertFullToken("tool", toolMatch, prompt); // gate-6 #2
     const wanted = toolMatch[1].toLowerCase();
     if (!isStockgapTool(wanted)) {
       throw new InvalidRequestError(`invalid_request: unknown tool ${wanted}`);
@@ -310,34 +312,48 @@ export function parseRequest(prompt: string): {
   return { tool, args: toolArgs(tool, parseFilter(tool, prompt)) };
 }
 
+const EXCLUDED_TAIL = /["'()\[\]{}<>&\\,;]/;
+
+/**
+ * The token after a key must not have been cut short at excluded punctuation
+ * (gate-5 #1, gate-6 #1): when the char right after the match is punctuation
+ * AND the one after continues a symbol-ish run, the capture is truncated —
+ * reject instead of returning a wrong report. A query-string separator
+ * (`&key=`) is accepted (gate-6 #5).
+ */
+function assertFullToken(
+  key: string,
+  hit: RegExpExecArray,
+  prompt: string,
+): void {
+  const tailAt = hit.index + hit[0].length;
+  const tail = prompt[tailAt];
+  if (tail === undefined) return;
+  const after = prompt.slice(tailAt + 1);
+  if (tail === "&" && /^[A-Za-z_][A-Za-z0-9_]*\s*=/.test(after)) return;
+  if (EXCLUDED_TAIL.test(tail) && /[A-Za-z0-9._-]/.test(after[0] ?? "")) {
+    throw new InvalidRequestError(`invalid_request: bad ${key}`);
+  }
+}
+
 /** Filter value of THIS tool's namespace only (gate-1 #6, gate-2 #5, gate-3 #2). */
 function parseFilter(
   tool: StockgapTool,
   prompt: string,
 ): string | undefined {
   const key = FILTER_KEY[tool];
-  // One regex, anchored to the FIRST key occurrence (gate-3 finding 2): the
-  // raw token after the key is captured whole and validated in full below, so
-  // a trailing '.'/'-' is never swallowed and a bad first value is never
+  // One regex, anchored to a REAL key start (gate-3 #2, gate-5 #3, gate-6 #4):
+  // the token after the key is captured whole and validated in full, so a
+  // trailing '.'/'-' is never swallowed and a bad first value is never
   // silently skipped when the key repeats. Quotes (JSON-shaped prompts) and
   // prose punctuation around the value are tolerated (gate-4 #1, #3).
   const hit = new RegExp(
-    `(?:^|[^A-Za-z0-9_-])["']?${key}\\\\?["']?\\s*[:=]\\s*\\\\?["']?([^\\s,;"'()\\[\\]{}<>&\\\\]*)`,
+    `(?:^|[^A-Za-z0-9_.\\\\"'-])\\\\*["']?${key}\\\\*["']?\\s*[:=]\\s*\\\\*["']?([^\\s,;"'()\\[\\]{}<>&\\\\]*)`,
     "i",
   ).exec(prompt);
   if (!hit) return undefined;
   const token = hit[1];
-  // Gate-5 #1: punctuation that continues into symbol chars means the token
-  // was cut short — a silently truncated filter is never returned.
-  const tailAt = hit.index + hit[0].length;
-  const tail = prompt[tailAt];
-  if (
-    tail !== undefined &&
-    /["'()\[\]{}<>&\\]/.test(tail) &&
-    /[A-Za-z0-9._-]/.test(prompt[tailAt + 1] ?? "")
-  ) {
-    throw new InvalidRequestError(`invalid_request: bad ${key}`);
-  }
+  assertFullToken(key, hit, prompt); // gate-5 #1, gate-6 #1, #5
   if (!/^[A-Za-z](?:[A-Za-z0-9._-]{0,10}[A-Za-z0-9])?$/.test(token)) {
     throw new InvalidRequestError(`invalid_request: bad ${key}`);
   }
