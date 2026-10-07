@@ -376,6 +376,36 @@ test("gate-2 #1: delivery error mapping — rejected vs retry vs generic", async
   assert.equal(classifyDeliveryError(new Error("something else")), null);
 });
 
+test("gate-5 #1: a filter value cut short at punctuation is invalid_request", () => {
+  for (const p of [
+    'token_symbol: NV"DA',
+    "token_symbol: NV'DA",
+    "token_symbol: NV&DA",
+    "token_symbol: TSLA(ON)",
+  ]) {
+    assert.throws(() => parseRequest(p), /bad token_symbol/, p);
+  }
+});
+
+test("gate-5 #2: backslash-escaped JSON prompts parse their tool and filters", () => {
+  const escaped = '{\\"tool\\":\\"get_cross_issuer\\",\\"underlying\\":\\"NVDA\\"}';
+  assert.deepEqual(parseRequest(escaped), {
+    tool: "get_cross_issuer",
+    args: { underlying: "NVDA" },
+  });
+});
+
+test("gate-5 #3: only a real key start selects the tool or filter", () => {
+  assert.deepEqual(parseRequest('{"x-tool":"get_oracle_latest"}'), {
+    tool: "get_spread",
+    args: {},
+  });
+  assert.deepEqual(parseRequest("multi-tool: get_oracle_latest"), {
+    tool: "get_spread",
+    args: {},
+  });
+});
+
 test("gate-4 #1: JSON-shaped prompts parse their tool and filters", () => {
   // quoted key-colon-value (a JSON object used as the prompt)
   assert.deepEqual(parseRequest('{"tool":"get_cross_issuer","underlying":"NVDA"}'), {

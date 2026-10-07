@@ -278,7 +278,7 @@ export function classifyUpstream(call: UpstreamCall): UpstreamStatus {
   return "upstream_error";
 }
 
-const TOOL_RE = /\btool["']?\s*[:=]\s*["']?([a-z_][a-z0-9_]*)\b/i;
+const TOOL_RE = /(?:^|[^A-Za-z0-9_-])["']?tool\\?["']?\s*[:=]\s*\\?["']?([a-z_][a-z0-9_]*)\b/i;
 
 /**
  * Work prompt → tool request. Deterministic parsing only:
@@ -322,11 +322,22 @@ function parseFilter(
   // silently skipped when the key repeats. Quotes (JSON-shaped prompts) and
   // prose punctuation around the value are tolerated (gate-4 #1, #3).
   const hit = new RegExp(
-    `\\b${key}["']?\\s*[:=]\\s*["']?([^\\s,;"'()\\[\\]{}<>&]*)`,
+    `(?:^|[^A-Za-z0-9_-])["']?${key}\\\\?["']?\\s*[:=]\\s*\\\\?["']?([^\\s,;"'()\\[\\]{}<>&\\\\]*)`,
     "i",
   ).exec(prompt);
   if (!hit) return undefined;
   const token = hit[1];
+  // Gate-5 #1: punctuation that continues into symbol chars means the token
+  // was cut short — a silently truncated filter is never returned.
+  const tailAt = hit.index + hit[0].length;
+  const tail = prompt[tailAt];
+  if (
+    tail !== undefined &&
+    /["'()\[\]{}<>&\\]/.test(tail) &&
+    /[A-Za-z0-9._-]/.test(prompt[tailAt + 1] ?? "")
+  ) {
+    throw new InvalidRequestError(`invalid_request: bad ${key}`);
+  }
   if (!/^[A-Za-z](?:[A-Za-z0-9._-]{0,10}[A-Za-z0-9])?$/.test(token)) {
     throw new InvalidRequestError(`invalid_request: bad ${key}`);
   }
