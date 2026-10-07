@@ -1,0 +1,42 @@
+# chain56_contracts — on-chain code proof (eth_getCode) — BSC mainnet, chain 56
+
+Captured: 2026-10-07T02:40:31Z · block 126173663 · RPC: https://bsc-dataseed.binance.org (JSON-RPC `eth_getCode` @ latest)
+Raw responses (every full bytecode hex): `chain56_contracts.json`
+Address provenance: SDK `dist/networks/index.d.ts` (SPIKE-LOG.md §6a) + upstream source of truth https://github.com/bnb-chain/apex-contracts#deployments (captured in `apex-contracts_deployments.{html,txt}`: «BSC Mainnet (chainId 56)» lists exactly these 4 addresses).
+Note: bscscan.com rejects scripted capture (HTTP 403, Cloudflare) — the RPC responses above are the durable proof; explorer links below re-verify by hand.
+
+## The 4 x402/ERC-8183 contracts on chain 56 (N19 exit-check)
+
+| Contract | Address (upstream checksummed) | eth_getCode code bytes | Fingerprint (code[0:16] … code[-16:]) | BscScan |
+|---|---|---|---|---|
+| U (United Stables, EIP-3009 payment token) | `0xcE24439F2D9C6a2289F741120FE202248B666666` | 2007 | `0x60806040526004361061004d575f3560` … `3e91582b5f64736f6c634300081c0033` | https://bscscan.com/address/0xcE24439F2D9C6a2289F741120FE202248B666666 |
+| AgenticCommerce (ERC-8183 commerce proxy) | `0xEa4DAa3100A767e86FDed867729ae7446476EBA6` | 130 | `0x60806040527f360894a13ba1a3210667` … `9056e1c82b64736f6c634300081c0033` | https://bscscan.com/address/0xEa4DAa3100A767e86FDed867729ae7446476EBA6 |
+| EvaluatorRouter (proxy) | `0x51895229E12F9876011789B04f8698af06cCD6DA` | 130 | `0x60806040527f360894a13ba1a3210667` … `9056e1c82b64736f6c634300081c0033` | https://bscscan.com/address/0x51895229E12F9876011789B04f8698af06cCD6DA |
+| OptimisticPolicy (UMA-style evaluation policy) | `0x9C01845705b3078Aa2e8cfF7520a6376FD766dE5` | 4413 | `0x60806040526004361015610011575f80` … `338d9f743664736f6c634300081c0033` | https://bscscan.com/address/0x9C01845705b3078Aa2e8cfF7520a6376FD766dE5 |
+
+All four return non-empty bytecode at `latest` → contracts are deployed and hold code on BSC mainnet (chain 56).
+
+## Supporting contracts (same stack + our own oracle)
+
+| Contract | Address | eth_getCode code bytes | BscScan |
+|---|---|---|---|
+| AgenticCommerce implementation | `0xd5f9b570c96b5d67702d508c0bfb8b3b09209787` | 10892 | https://bscscan.com/address/0xd5f9b570c96b5d67702d508c0bfb8b3b09209787 |
+| EvaluatorRouter implementation | `0xf0cf8f47e5c035f16247ff16e9f367e477ee5007` | 6685 | https://bscscan.com/address/0xf0cf8f47e5c035f16247ff16e9f367e477ee5007 |
+| StockGap PriceRegistry (own oracle anchor, BSC mainnet) | `0x8d2cf4a56f754d5770985d95aa179ef4d5b9b971` | 597 | https://bscscan.com/address/0x8d2cf4a56f754d5770985d95aa179ef4d5b9b971 |
+
+## Transaction receipts (eth_getTransactionReceipt, all status 0x1)
+
+| Tx | Hash | status | block | to / contractAddress | logs | BscScan |
+|---|---|---|---|---|---|---|
+| PriceRegistry deploy | `0x2235be2b3c516f89f4bdb84f199fb774182c424f024a10d1a35569536948afa1` | 0x1 | 125562365 | `0x8d2cf4a56f754d5770985d95aa179ef4d5b9b971` | 0 | https://bscscan.com/tx/0x2235be2b3c516f89f4bdb84f199fb774182c424f024a10d1a35569536948afa1 |
+| OraclePublish (event OraclePublish) | `0x8055d62e8667e5564e3ad448a0a5f769285a918ee7f1b05b3ec436ac1dc97cec` | 0x1 | 125562760 | `0x8d2cf4a56f754d5770985d95aa179ef4d5b9b971` | 1 | https://bscscan.com/tx/0x8055d62e8667e5564e3ad448a0a5f769285a918ee7f1b05b3ec436ac1dc97cec |
+| first live dust swap (BNB->NVDAB demo) | `0xd8ef9e75467ddb27ab97076e3b112fbe4a552488b81dddd09a81bb4cd490a48f` | 0x1 | 125566635 | `0xb44446b0c8e56988c34f7ff73ae904982b5fdda5` | 10 | https://bscscan.com/tx/0xd8ef9e75467ddb27ab97076e3b112fbe4a552488b81dddd09a81bb4cd490a48f |
+
+Blocks match `stockgap-agent/docs/SUBMISSION_CHECKLIST.md:77` (deploy 125562365, publish 125562760, dust swap 125566635).
+
+## Reproduce
+
+```bash
+curl -s -X POST https://bsc-dataseed.binance.org -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getCode","params":["0xEa4DAa3100A767e86FDed867729ae7446476EBA6","latest"]}'
+```

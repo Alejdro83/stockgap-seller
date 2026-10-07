@@ -1,0 +1,88 @@
+BNB Hack: Tokenized Stocks Edition - BNB Chain HackathonChainsMAIN CHAINSBNB Smart ChainFast. Affordable. EVM-CompatibleopBNBBuilt with the OP StackBNB GreenfieldDecentralized data storage & economyBNB Beacon ChainSunset CompleteBNB ecosystem’s staking & governance layerSHAPE THE CHAINStakingEarn rewards by securing the networkGovernanceSubmit proposals & participate in on-chain governanceDocumentationFaucetBscScanBSCTraceDocumentationFaucetBridgeopBNBScanDocumentationFaucetBridgeGreenfieldScanDCellarLearn more about FusionToken Recovery ToolBeacon Chain ExplorerNative StakingLiquid StakingBuildGET STARTEDWalletsYour gateway to BNB ChainExamples & TutorialsStart with example and tutorialsNetworks and RPCA list of BNB Chain related networksFaucetPilot tokens on BNB Smart ChainADVANCEDDocumentationFull technical documentationToolsEssential tools for buildersEXPLORERSBscScanopBNBScanGreenfieldScanSOLUTIONSCAS20Institutional FinancePrivacyAgent InfrastructureReal World Assets TokenizationStablecoinPaymentBNB Agent StudioSubmit dAppsExploreRelease NoteStrategic updates for your advantageBlogFollow our blog for the latest updatesWalletsSecurely connect to funds & dAppsExplore dApps Explore dApps on BNB ChainBridgeCross-chain transfer between networksGet BNBGet BNB & explore use casesAccelerateIdeationBNB HackExplore online & offline hackathons on BNB ChainBNB Incubation Alliance (BIA)Building together to fast-track your Web3 journeyMost Valuable Builder Accelerator Program (MVB)Incubation for top Web3 projectsDeploymentBNB Chain GrantsGrants for ecosystem buildersKickstartExplore essential tools & supportSpaceBuilder BunkerA Workspace to Meet & BuildSee All ProgramsConnectCommunityCommunity HubConnect with the communityBuild N’ Build ForumA public, community-driven dev forumin Real LifeEventsGlobal and local meetups, conferences, and hackathonsJoin usCareers🔥Explore Opportunities on BNB ChainAnnouncementDiscussionConnect with BDTelegramContact FormBNB Chain CareersEcosystem JobsAsk AIEnglishHackathons/BNB Hack: Tokenized Stocks EditionHackathons/BNB Hack: Tokenized Stocks EditionBNB Hack: Tokenized Stocks Edition16 Sep - 11 Oct, 2026Online20,000 USDPrize Pool20,000 USDShare viaTime16 Sep - 11 Oct, 2026 (UTC +0)OngoingLocationOnlineCategorieshackathonSponsored byJoin Hackathon and Win Now!Submit ProjectApply as HackerOverviewPrizes & BountiesTracksResourcesFriday, 4pm, New York. The closing bell rings and every stock price in the country freezes until Monday. On-chain, nothing stops. The tokenized stocks trades straight through the weekend, priced off a reference that has not updated in two days. Anyone can see the gap, and almost nobody has built anything that acts on it.
+That is most of this asset class right now. Tokenized equities landed on-chain faster than the tooling did, so the agents, baskets, rebalancers and onboarding flows that will decide how people actually trade them mostly have not been written yet. Whoever writes them first sets the standard, and the bar is high: this is the first asset class where your on-chain product goes head to head with a Web2 product people already use and already like.
+BNB Chain and Binance Web3 Wallet are putting $20,000 behind whoever takes it on. Four and a half weeks, one track, and the full stack to do it with.
+What You Get
+One aggregated API surfaceMarket data, RWA data, swap routing, transaction simulation, wallet state and DeFi positions, through a single integration.Free API accessFree for the duration of the event, with elevated rate limits if you need (register to the hack to get it).Workshop and mentoringA workshop session during the build window, plus mentoring from the BNB Chain and Binance Web3 Wallet teams.24/7 supportQuestions answered in the builder Telegram group, which is also where you find teammates.A route beyond the prizeWinner spotlights on X and bnbchain.org, plus Kickstart Package eligibility for top projects.
+Key Dates (UTC)
+MilestoneDateRegistration opens, building startsWed 16 Sep, 12:00Submissions lockSun 11 Oct, 12:00Judging12 - 23 OctWinners announcedWeek of 26 Oct
+Eligibility
+Open to teams and solo builders.
+One entry per team.
+Your repo, demo and deployed link must stay accessible through judging.
+This hackathon and the Binance Wallet developer product referenced herein are not open to residents of, or persons located in, the United States, Canada, the Netherlands, Iran, Cuba, North Korea, Crimea, Donetsk People's Republic, Luhansk People's Republic, the United Kingdom, and Japan. By registering, you confirm you are not located in, a resident of, or a citizen of any of these jurisdictions, and that you are not subject to any sanctions list. Participants remain responsible for ensuring their participation complies with the laws applicable to them.
+See the full list of restricted regions.SponsorsBinance Web3 Wallet$20,000 total, funded by BNB Chain and Binance Web3 Wallet.
+PlacementPrize🥇 1st place$6,000🥈 2nd place$4,000🥉 3rd place$3,0004th place$2,0005th place$1,000
+Special Prizes
+Two stack specials at $2,000 each, awarded across every submission with no separate entry needed. You can win a main placement and a special.
+Special prizeAmountCriteriaBest Use of Agentic Wallet / Wallet Skills$2,000Deepest, most credible use of the AI execution layer. Funded by Binance Web3 Wallet.Best Use of BNB Agent Studio$2,000Deepest use of Agent Studio: agent identity, autonomous runtime, self-funding via x402. Funded by BNB Chain.
+Beyond the Cash
+Free API access during the event, with elevated rate limits if you need.
+A mentor for every finalist team, from across both partners.
+Kickstart Package eligibility if you place near the top.
+Agent Studio runtime credits for the event window, so you are not paying to keep an agent alive while you build (depending the hosting you choose, between 72 and 24h, only on testnet).
+Winner spotlights on X and bnbchain.org.
+Main Track: Tokenized Stocks Products & Agents
+Build something people would actually use with tokenized stocks on BSC.
+An autonomous agent, a trading interface, a portfolio tool, a dashboard, a Telegram bot, an MCP server, an SDK: attack it from whatever angle suits you. The deliverable is a working project, not a deck. Agents are welcome and expected, and are scored on how well they are built rather than on the PnL they could print, we don't track it for this edition.
+The Rules of the Track
+At least one of bStocks, Ondo or xStocks has to be central to what you submit.
+Cross-asset products are in scope, including pairing a tokenized equity leg with crypto or stablecoins.
+Spot only. Perps are out.
+BSC mainnet only. Dry-run with the Transaction API while you build, then demo with small live amounts. Teams fund their own wallets, and a few dollars is enough to prove the flow works.
+The Stack
+ComponentWhat it gives youRWA Data APIThe tokenized stocks layer: token and platform lists, on-chain price against the underlying reference price, search by ticker, company profile with attestation reports, market status and next open time, sector filters (Magnificent 7, AI Chips, ETF, Buffett Portfolio).Market APIReal-time prices, candlesticks and token analytics across tokenized equities and crypto pairs. The research and signal layer.Trading APICross-DEX aggregated quotes, swaps and approvals, with built-in MEV protection.Transaction APIOn-chain simulation and broadcasting, so you can dry-run every call before you commit real funds.Wallet APIBalances, positions and portfolio state across chains.DeFi APIProtocol information, TVL, APY rankings and on-chain positions, plus unsigned calldata for deposit, redeem and LP across BSC DeFi.b402 PaymentsPay-per-call payments, for agents that buy data or inference from other agents.Agentic Wallet / Wallet SkillsThe AI execution layer. Optional, heavily weighted in scoring and tied to a special prize.BNB Agent StudioOne-prompt deployment of a persistent on-chain agent: wallet provisioning, ERC-8004 identity, ERC-8183 task interface and managed cloud runtime, with the MCP server auto-registered into Cursor or Claude Code. Optional, tied to a special prize.BNB ChainExecution venue: PancakeSwap and BSC tokenized-equity liquidity.
+Combining API modules in a way that looks like it should not work but does is exactly what we are hoping to see.
+Ideas to Build
+BuildWhat it doesNatural-language strategy agentReads a strategy in plain English ("rotate into defensives when volatility spikes"), then writes and executes the rules itself.Market-hours arbitrageTokenized equities trade around the clock while the underlying market is shut.Cross-protocol arbitragePrices the gap between two representations of the same underlying, for example bStocks against Ondo.On-chain vs reference price monitorThe RWA Data API returns both prices. Track the spread and act on it.Auto-DCA and rebalancingBuys into a tokenized stock basket on a schedule, rebalances on drift thresholds.Earnings-calendar agentPositions ahead of scheduled events and flattens afterwards.TradFi-crypto portfolio agentHolds a target equity/crypto ratio and rebalances as correlation shifts."Buy your first stock on-chain"Card to tokenized equity in under a minute, no seed phrase in sight.One-tap thematic basketsAI, semis, energy, with transparent on-chain composition.MCP server or SDK wrapperMakes the Binance Web3 API one-line callable from any agent framework, or straight from Agent Studio.
+What to Submit
+1. Your Project
+A working project built on one or more Binance Web3 API modules, and optionally Agentic Wallet or Wallet Skills.
+A public repository.
+A demo video, four minutes or less (strongly recommended but optional)
+A deployed link, or instructions a judge can follow.
+2. A Developer Experience Report
+Most hackathons do not ask for one. This one does, and it is worth a quarter of your score.
+What we want to knowOnboardingHow long from opening the docs to your first successful API call, and where you got stuck.Documentation issuesWhich page had the error, and where on it. Vague feedback does not count.API pitfallsError messages that made no sense, edge cases that bit you, latency. Be specific.AI stack feedbackDid you use Wallet Skills, Agentic Wallet or the CLI? What worked, what did not, what is missing.Tokenized-stock specificsLiquidity depth, slippage, behaviour outside traditional market hours, the gap between on-chain and reference price, and how the bStocks, Ondo and xStocks versions of the same thing differ in practice.Redesign suggestionsIf you were the engineer behind the developer platform, how would you rebuild it so someone can make a call the moment they land?Requested capabilitiesEndpoints, SDK support, features or tooling you want added.
+Perfunctory or AI-generated reports are not accepted, the goal is for us to see what worked or not so we won't be able to do anything if you generate this. AI-assisted code is completely fine.
+How You're Judged
+Scores are pooled after each judge has worked through every project on their own.
+CriterionWeightWhat we look atTechnical implementation30%Does it run, and how deep does the integration go? Modules used, error handling, how it holds up.Creativity & originality25%Were the APIs used in ways nobody expected? Does this already exist five times over?Developer Experience Report25%Specific, actionable, honest, no fluff. Includes the AI stack section.Product quality & UX20%Is it usable by the people it is for? Would it bring non-crypto-native users on-chain?Start here
+Developer portal, sign in and apply for a Web3 API key: https://web3.binance.com/en/dev-portal
+Register to the hackathon: https://forms.gle/NEmy3FxYc4f5Dua47
+Binance Web3 API overview: https://web3.binance.com/en/dev-docs/introduction
+Authentication and request signing: https://web3.binance.com/en/dev-docs/authentication
+Full REST reference: https://web3.binance.com/en/dev-docs/catalog/web3-wallet/api/rest-api
+API modules
+RWA Data, the tokenized stocks layer: https://web3.binance.com/en/dev-docs/catalog/web3-wallet/api/rest-api/rwa-data
+General market data: https://web3.binance.com/en/dev-docs/catalog/web3-wallet/api/rest-api/general-data
+Trading API: https://web3.binance.com/en/dev-docs/catalog/web3-wallet/api/rest-api/trading-api
+Transaction API: https://web3.binance.com/en/dev-docs/catalog/web3-wallet/api/rest-api/transaction-api
+Wallet API: https://web3.binance.com/en/dev-docs/catalog/web3-wallet/api/rest-api/wallet-api
+Address portfolio: https://web3.binance.com/en/dev-docs/catalog/web3-wallet/api/rest-api/address-portfolio
+DeFi data: https://web3.binance.com/en/dev-docs/catalog/web3-wallet/api/rest-api/defi-data
+DeFi transaction building: https://web3.binance.com/en/dev-docs/catalog/web3-wallet/api/rest-api/defi-transaction
+b402 payments: https://web3.binance.com/en/dev-docs/catalog/web3-wallet/api/rest-api/b402-payments
+AI layer
+Binance Agentic Wallet: https://developers.binance.com/en/docs/products/agentic-wallet/welcome
+Install Agentic Wallet: https://developers.binance.com/en/docs/products/agentic-wallet/quickstart/install-agentic-wallet
+Tokenized securities use case: https://developers.binance.com/en/docs/products/agentic-wallet/use-cases/trading/stock-trading
+Skills reference: https://developers.binance.com/en/docs/products/agentic-wallet/reference/skills
+Binance Wallet Skills overview: https://developers.binance.com/en/docs/products/wallet-skills/overview
+Skills Hub repository: https://github.com/binance/binance-skills-hub
+One-line install: npx skills add binance/binance-skills-hub/skills/binance-web3/binance-agentic-wallet
+Feed the docs to your agent
+Doc index: https://web3.binance.com/en/dev-docs/llms.txt
+Full documentation in one file: https://web3.binance.com/en/dev-docs/llms-full.txt
+BNB Chain
+BNB Agent Studio: https://www.bnbchain.org/en/bnb-agent-studio
+BNB Chain documentation: https://docs.bnbchain.org
+Dev tools: https://www.bnbchain.org/en/dev-tools
+BscTrace: https://bsctrace.com
+PancakeSwap: https://pancakeswap.finance
+Support and submission
+Builder Telegram group: https://t.me/+MhiOLT0YUnlmNWFk
+BNB Chain Discord: https://discord.gg/bnbchain
+Workshop: to be announced
+Submission form: https://forms.gle/yToDUzaDMwWnq6R6A
+Developer Experience Report template: https://forms.gle/EUQ39xf54GHjC2ys5
+Prize Pool20,000 USDShare viaTime16 Sep - 11 Oct, 2026 (UTC +0)OngoingLocationOnlineCategorieshackathonSponsored byJoin Hackathon and Win Now!Submit ProjectApply as HackerTelegram (Announcement)Telegram (Discussion)ChainsBNB Smart ChainBNB GreenfieldopBNBUse BNB ChainDownload WalletGet BNBStake BNBBridge AssetsExplore dAppsPay by CryptoEarn by Liquid StakingBuildDemos & TutorialsDocumentationsFaucetDev ToolsSubmit dAppGreenfield ConsoleBNBChain ListWhitepaperParticipateEventsHackathonMVB ProgramBuilder Support ProgramsGovernanceBug BountyGet WorkspaceEcosystem JobsAboutBlogCareersBNB Chain VerifyRed AlarmPrivacy PolicyDisclaimerContact UsBrand GuidelinesChainsBNB Smart ChainBNB GreenfieldopBNBUse BNB ChainDownload WalletGet BNBStake BNBBridge AssetsExplore dAppsPay by CryptoEarn by Liquid StakingBuildDemos & TutorialsDocumentationsFaucetDev ToolsSubmit dAppGreenfield ConsoleBNBChain ListWhitepaperParticipateEventsHackathonMVB ProgramBuilder Support ProgramsGovernanceBug BountyGet WorkspaceEcosystem JobsAboutBlogCareersBNB Chain VerifyRed AlarmPrivacy PolicyDisclaimerContact UsBrand Guidelines© 2026 BNB Chain. All rights reserved.CookiesCookie Preferences EnglishEnglishBahasa IndonesiaEspañol (Latinoamérica)FrançaisPortuguês (Brasil)Tiếng ViệtTürkçeРусский简体中文繁體中文한국어

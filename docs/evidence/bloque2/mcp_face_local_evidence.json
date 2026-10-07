@@ -1,0 +1,66 @@
+{
+ "note": "seller MCP face (streamable-HTTP) served by the plain node process; negotiate is FREE-mode (price_usd=0) \u2014 the 0.1 U signed envelope for the PAID mode is docs/evidence/spike/negotiate_envelope.json",
+ "initialize": {
+  "status": 200,
+  "session_id": "adb8d6e6-bcd2-4734-bb18-0810881b048b",
+  "body_raw": "event: message\ndata: {\"result\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{\"tools\":{\"listChanged\":true}},\"serverInfo\":{\"name\":\"bnbagent-seller\",\"version\":\"1.0.0\"}},\"jsonrpc\":\"2.0\",\"id\":1}\n\n"
+ },
+ "tools_list": {
+  "status": 200,
+  "tool_count": 17,
+  "tool_names": [
+   "negotiate",
+   "notify_funded",
+   "wallet_info",
+   "wallet_list",
+   "wallet_address",
+   "balance_native",
+   "balance_u",
+   "pieverse_usage",
+   "agent_info",
+   "agent_by_address",
+   "job_status",
+   "job_list",
+   "job_count",
+   "tx_status",
+   "block_info",
+   "contract_call_view",
+   "network_info"
+  ]
+ },
+ "negotiate_free_mode": {
+  "status": 200,
+  "envelope": {
+   "request": {
+    "task_description": "StockGap gap report for NVDA",
+    "terms": {
+     "deliverables": "JSON gap report",
+     "quality_standards": "verbatim rows",
+     "evaluation_required": true,
+     "evaluator_type": "uma_oov3",
+     "currency": "0xc70B8741B8B07A6d61E54fd4B20f22Fa648E5565"
+    }
+   },
+   "request_hash": "0xeb12f40edad85e1d9ef70957af1aa281e60769dc1801e7a4882e5b565f13e0f4",
+   "response": {
+    "accepted": true,
+    "terms": {
+     "deliverables": "JSON gap report",
+     "quality_standards": "verbatim rows",
+     "evaluation_required": true,
+     "evaluator_type": "uma_oov3",
+     "price": "0",
+     "currency": "0xc70B8741B8B07A6d61E54fd4B20f22Fa648E5565"
+    },
+    "estimated_completion_seconds": 600,
+    "quote_expires_at": 1791344444,
+    "negotiated_at": 1791343544
+   },
+   "response_hash": "0xf893250396f1e2130c873ccbd8eb0932fc0f8058aa3746e4b72f198252ff07ce",
+   "negotiation_hash": "0xc5cbf967cd6997c7b45ceace9abbea79932b949b69d5cc20f739bf2140b50105",
+   "provider_sig": "0x63f312fde153e0ecc7c3d1e7cfc8eb1761b0850e27318ecc62c621d72328f7d8701dc215cff097dbeebffcb468f064377780c04de3de59612f61fb0f54996dcd1b",
+   "chain_id": 97,
+   "verifying_contract": "0xa206c0517B6371C6638CD9e4a42Cc9f02A33B0DE"
+  }
+ }
+}
