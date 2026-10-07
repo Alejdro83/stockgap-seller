@@ -25,10 +25,15 @@ FROM node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472
 ENV NODE_ENV=production
 WORKDIR /repo/app/agent
 COPY --from=build /out ./
-# Only the keystore-materialization dir (workspace-root .studio/) is writable
-# by the runtime user; `dist/`, `node_modules/` and `studio.toml` keep
-# root-owned read-only permissions (gate-2 finding 2).
-RUN mkdir -p /repo/.studio/wallets && chown -R node:node /repo/.studio
+# Only the keystore-materialization dir (workspace-root .studio/) and the
+# local storage dir are writable by the runtime user; `dist/`, `node_modules/`
+# and `studio.toml` keep root-owned read-only permissions (gate-2 finding 2).
+# ERC-8183 deliverables land in STORAGE_LOCAL_PATH — it MUST be writable by
+# `node` or submitResult fails with EACCES (gate-3 finding 1).
+ENV STORAGE_LOCAL_PATH=/repo/.studio/agent-data
+RUN mkdir -p /repo/.studio/wallets /repo/.studio/agent-data \
+  && chown -R node:node /repo/.studio \
+  && su node -s /bin/sh -c 'test -w /repo/.studio/agent-data && test -w /repo/.studio/wallets'
 USER node
 ENV AGENT_BIND_HOST=0.0.0.0 AGENT_PORT=8000
 EXPOSE 8000

@@ -310,35 +310,59 @@ export function parseRequest(prompt: string): {
   return { tool, args: toolArgs(tool, parseFilter(tool, prompt)) };
 }
 
-/** Filter value of THIS tool's namespace only (gate-1 #6, gate-2 #5). */
+/** Filter value of THIS tool's namespace only (gate-1 #6, gate-2 #5, gate-3 #2). */
 function parseFilter(
   tool: StockgapTool,
   prompt: string,
 ): string | undefined {
   const key = FILTER_KEY[tool];
-  const keyHit = new RegExp(`\\b${key}\\s*[:=]`, "i").test(prompt);
-  if (!keyHit) return undefined;
-  // The value must be a well-formed symbol AND fully consumed (negative
-  // lookahead) — otherwise the request is invalid, not silently filterless.
-  const match = new RegExp(
-    `\\b${key}\\s*[:=]\\s*([A-Za-z][A-Za-z0-9._-]{0,11})(?![A-Za-z0-9._-])`,
-    "i",
-  ).exec(prompt);
-  if (!match) throw new InvalidRequestError(`invalid_request: bad ${key}`);
-  return match[1];
+  // One regex, anchored to the FIRST key occurrence (gate-3 finding 2): the
+  // raw token after the key is captured whole and validated in full below, so
+  // a trailing '.'/'-' is never swallowed and a bad first value is never
+  // silently skipped when the key repeats.
+  const hit = new RegExp(`\\b${key}\\s*[:=]\\s*([^\\s,;"]*)`, "i").exec(prompt);
+  if (!hit) return undefined;
+  const token = hit[1];
+  if (!/^[A-Za-z](?:[A-Za-z0-9._-]{0,10}[A-Za-z0-9])?$/.test(token)) {
+    throw new InvalidRequestError(`invalid_request: bad ${key}`);
+  }
+  return token;
 }
 
 /**
- * Cheap pre-check for the x402/b402 face (gate-2 finding 7): an unknown
- * `tool:` in the raw request body is answered 400 BEFORE any payment or
- * settlement path can see a request that can never succeed.
+ * Pre-payment validation for the x402/b402 face (gate-2 #7, gate-3 #3):
+ * mirrors the SDK's prompt resolution (query.prompt first, then the JSON
+ * body.prompt, then the raw body) and runs the FULL request parsing on that
+ * prompt — so a JSON-escaped `tool:` or a query-string prompt cannot bypass
+ * it. Returns the invalid_request message (the caller answers 400) BEFORE
+ * any payment or settlement path can see the request, or null when valid.
  */
-export function precheckUnknownTool(body: string): string | null {
-  const match = TOOL_RE.exec(body);
-  if (match && !isStockgapTool(match[1].toLowerCase())) {
-    return `invalid_request: unknown tool ${match[1].toLowerCase()}`;
+export function validateSellRequest(
+  queryPrompt: string | undefined,
+  body: string,
+): string | null {
+  const prompt = resolveSellPrompt(queryPrompt, body);
+  try {
+    parseRequest(prompt);
+    return null;
+  } catch (e) {
+    return e instanceof InvalidRequestError ? e.message : null;
   }
-  return null;
+}
+
+/** The SDK's prompt precedence: query.prompt -> body.prompt -> raw body. */
+function resolveSellPrompt(
+  queryPrompt: string | undefined,
+  body: string,
+): string {
+  if (typeof queryPrompt === "string" && queryPrompt.length > 0) return queryPrompt;
+  try {
+    const parsed = JSON.parse(body) as { prompt?: unknown };
+    if (parsed && typeof parsed.prompt === "string") return parsed.prompt;
+  } catch {
+    /* raw body fallback */
+  }
+  return body;
 }
 
 /**

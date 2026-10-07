@@ -96,7 +96,7 @@ import * as signing from "./signing.js";
 import {
   runWork as sellerRunWork,
   classifyDeliveryError,
-  precheckUnknownTool,
+  validateSellRequest,
 } from "./sellerCore.js";
 import { READ_TOOL_CATALOG, type ReadToolName } from "./readToolCatalog.js";
 
@@ -719,11 +719,15 @@ async function main(): Promise<void> {
             .json({ error: "seller request limit reached" });
           return;
         }
-        // Gate-2 finding 7: an unknown `tool:` is a client error — answer 400
-        // BEFORE any payment or settlement path can see the request.
-        const badTool = precheckUnknownTool(request.body ?? "");
-        if (badTool) {
-          res.status(400).json({ error: badTool });
+        // Gate-2 #7 / gate-3 #3: invalid requests are answered 400 BEFORE any
+        // payment or settlement path can see them, using the SDK's own prompt
+        // precedence (query.prompt -> body.prompt -> raw body).
+        const invalid = validateSellRequest(
+          typeof req.query.prompt === "string" ? req.query.prompt : undefined,
+          request.body ?? "",
+        );
+        if (invalid) {
+          res.status(400).json({ error: invalid });
           return;
         }
         const out = await seller.handle(request);

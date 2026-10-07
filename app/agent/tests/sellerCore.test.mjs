@@ -16,7 +16,7 @@ const {
   parseRequest,
   classifyUpstream,
   classifyDeliveryError,
-  precheckUnknownTool,
+  validateSellRequest,
   STOCKGAP_TOOLS,
   GapReportError,
   InvalidRequestError,
@@ -308,7 +308,7 @@ test("gate-1 #6: prompt parses per-tool filter key, no cross-namespace remap", a
   }
 });
 
-test("gate-2 #5: malformed or truncated filter values are invalid_request", () => {
+test("gate-2 #5 / gate-3 #2: malformed or truncated filter values are invalid_request", () => {
   // digit-leading symbol cannot match the value grammar -> explicit error
   assert.throws(() => parseRequest("token_symbol: 1INCH"), (err) => {
     assert.ok(err instanceof InvalidRequestError);
@@ -318,6 +318,13 @@ test("gate-2 #5: malformed or truncated filter values are invalid_request", () =
   // over-long value must NOT be silently truncated at the '-' boundary
   assert.throws(
     () => parseRequest("token_symbol: ABCDEFGHIJKL-X"),
+    /bad token_symbol/,
+  );
+  // gate-3 #2: a sentence-ending period is not part of the symbol
+  assert.throws(() => parseRequest("token_symbol: NVDA."), /bad token_symbol/);
+  // gate-3 #2: a repeated key never lets a bad first value fall through
+  assert.throws(
+    () => parseRequest("token_symbol: 1INCH token_symbol: NVDA"),
     /bad token_symbol/,
   );
   // dotted symbols stay accepted
@@ -369,16 +376,24 @@ test("gate-2 #1: delivery error mapping — rejected vs retry vs generic", async
   assert.equal(classifyDeliveryError(new Error("something else")), null);
 });
 
-test("gate-2 #7: precheckUnknownTool rejects unknown tools in raw bodies", () => {
+test("gate-2 #7 / gate-3 #3: validateSellRequest mirrors the SDK prompt precedence", () => {
+  // query-string prompt is checked (the SDK reads it FIRST)
+  assert.match(validateSellRequest("tool: drain_wallet", ""), /unknown tool drain_wallet/);
+  // JSON-escaped prompt is checked after decoding
   assert.match(
-    precheckUnknownTool('{"prompt":"tool: drain_wallet"}'),
+    validateSellRequest(undefined, JSON.stringify({ prompt: "tool:\ndrain_wallet" })),
     /unknown tool drain_wallet/,
   );
-  assert.equal(
-    precheckUnknownTool('{"prompt":"tool: get_spread token_symbol: NVDA"}'),
-    null,
+  // only body.prompt counts — other fields cannot shadow it
+  assert.match(
+    validateSellRequest(undefined, JSON.stringify({ meta: "tool: get_spread", prompt: "tool: drain_wallet" })),
+    /unknown tool drain_wallet/,
   );
-  assert.equal(precheckUnknownTool('{"prompt":"gap report please"}'), null);
+  // malformed filters are pre-checked too
+  assert.match(validateSellRequest("token_symbol: 1INCH", ""), /bad token_symbol/);
+  // valid requests pass
+  assert.equal(validateSellRequest(undefined, '{"prompt":"StockGap gap report"}'), null);
+  assert.equal(validateSellRequest("tool: get_spread token_symbol: NVDA", ""), null);
 });
 
 test("callStockgapTool rejects tools outside the allowlist", async () => {
