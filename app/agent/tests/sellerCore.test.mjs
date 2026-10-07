@@ -430,6 +430,36 @@ test("gate-6 #1: values cut short at ',' or ';' are invalid_request", () => {
   }
 });
 
+test("gate-9 MED: uppercase 'escapes' never eat a ticker's first letter", () => {
+  assert.deepEqual(parseRequest("token_symbol: \\NVDA"), {
+    tool: "get_spread",
+    args: { token_symbol: "NVDA" },
+  });
+  assert.deepEqual(parseRequest("token_symbol:\\TSLA"), {
+    tool: "get_spread",
+    args: { token_symbol: "TSLA" },
+  });
+  assert.deepEqual(parseRequest("token_symbol: \\RIVN"), {
+    tool: "get_spread",
+    args: { token_symbol: "RIVN" },
+  });
+  // the key-anchor escape is case-sensitive too
+  assert.deepEqual(parseRequest("x\\Ntool: get_oracle_latest"), {
+    tool: "get_spread",
+    args: {},
+  });
+});
+
+test("accepted residual: an escape INSIDE a value cuts it at the escape (pinned)", () => {
+  // `NV\nDA` -> 'NV'. Escapes are separators by design (gate-8 #2); the
+  // fragment-glued-to-escape truncation is a documented residual in
+  // docs/BLOQUE2-LOG.md next to the accepted `NV",'DA` edge (gate-9 #2).
+  assert.deepEqual(parseRequest(String.raw`token_symbol: NV\nDA`), {
+    tool: "get_spread",
+    args: { token_symbol: "NV" },
+  });
+});
+
 test("gate-8 #1: quote runs cut the value loudly", () => {
   for (const p of ['token_symbol: NV"""DA', "token_symbol: NV\"'\"DA", 'token_symbol: NV",,DA']) {
     assert.throws(() => parseRequest(p), /bad token_symbol/, p);

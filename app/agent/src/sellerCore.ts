@@ -278,8 +278,16 @@ export function classifyUpstream(call: UpstreamCall): UpstreamStatus {
   return "upstream_error";
 }
 
-const TOOL_RE =
-  /(?:^|[^\p{L}\p{M}\p{N}_.\\"'-]|\\[nrt])\\*["']?tool\\*["']?\s*[:=](?:\s|\\+[nrt])*\\*["']?([^\s,;"'()\[\]{}<>&\\]*)/iu;
+/** Case-insensitive key spelling without an `i` flag (gate-9 MED: the escape
+ *  letters `nrt` must stay lowercase-only, and regex modifier groups need a
+ *  newer Node than 22). */
+const ci = (s: string): string =>
+  [...s].map((c) => `[${c.toLowerCase()}${c.toUpperCase()}]`).join("");
+
+const TOOL_RE = new RegExp(
+  `(?:^|[^\\p{L}\\p{M}\\p{N}_.\\\\"'-]|\\\\[nrt])\\\\*["']?${ci("tool")}\\\\*["']?\\s*[:=](?:\\s|\\\\+[nrt])*\\\\*["']?([^\\s,;"'()\\[\\]{}<>&\\\\]*)`,
+  "u",
+);
 
 /**
  * Work prompt → tool request. Deterministic parsing only:
@@ -353,8 +361,8 @@ function parseFilter(
   // silently skipped when the key repeats. Quotes (JSON-shaped prompts) and
   // prose punctuation around the value are tolerated (gate-4 #1, #3).
   const hit = new RegExp(
-    `(?:^|[^\\p{L}\\p{M}\\p{N}_.\\\\"'-]|\\\\[nrt])\\\\*["']?${key}\\\\*["']?\\s*[:=](?:\\s|\\\\+[nrt])*\\\\*["']?([^\\s,;"'()\\[\\]{}<>&\\\\]*)`,
-    "iu",
+    `(?:^|[^\\p{L}\\p{M}\\p{N}_.\\\\"'-]|\\\\[nrt])\\\\*["']?${ci(key)}\\\\*["']?\\s*[:=](?:\\s|\\\\+[nrt])*\\\\*["']?([^\\s,;"'()\\[\\]{}<>&\\\\]*)`,
+    "u",
   ).exec(prompt);
   if (!hit) return undefined;
   const token = hit[1];
