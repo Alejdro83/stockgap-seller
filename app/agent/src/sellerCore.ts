@@ -278,7 +278,7 @@ export function classifyUpstream(call: UpstreamCall): UpstreamStatus {
   return "upstream_error";
 }
 
-const TOOL_RE = /\btool\s*[:=]\s*([a-z_][a-z0-9_]*)\b/i;
+const TOOL_RE = /\btool["']?\s*[:=]\s*["']?([a-z_][a-z0-9_]*)\b/i;
 
 /**
  * Work prompt → tool request. Deterministic parsing only:
@@ -319,8 +319,12 @@ function parseFilter(
   // One regex, anchored to the FIRST key occurrence (gate-3 finding 2): the
   // raw token after the key is captured whole and validated in full below, so
   // a trailing '.'/'-' is never swallowed and a bad first value is never
-  // silently skipped when the key repeats.
-  const hit = new RegExp(`\\b${key}\\s*[:=]\\s*([^\\s,;"]*)`, "i").exec(prompt);
+  // silently skipped when the key repeats. Quotes (JSON-shaped prompts) and
+  // prose punctuation around the value are tolerated (gate-4 #1, #3).
+  const hit = new RegExp(
+    `\\b${key}["']?\\s*[:=]\\s*["']?([^\\s,;"'()\\[\\]{}<>&]*)`,
+    "i",
+  ).exec(prompt);
   if (!hit) return undefined;
   const token = hit[1];
   if (!/^[A-Za-z](?:[A-Za-z0-9._-]{0,10}[A-Za-z0-9])?$/.test(token)) {
@@ -342,6 +346,8 @@ export function validateSellRequest(
   body: string,
 ): string | null {
   const prompt = resolveSellPrompt(queryPrompt, body);
+  // An empty prompt is the SDK's own case (gate-4 #2) — never a 400 from us.
+  if (prompt.trim().length === 0) return null;
   try {
     parseRequest(prompt);
     return null;
@@ -350,19 +356,31 @@ export function validateSellRequest(
   }
 }
 
-/** The SDK's prompt precedence: query.prompt -> body.prompt -> raw body. */
+/**
+ * Exactly the SDK's promptFrom precedence (gate-4 #2): query.prompt whenever
+ * it is defined (even empty), else JSON body.prompt only when the body is a
+ * non-array object with a string prompt (otherwise ""), else the raw body —
+ * and only when JSON.parse throws.
+ */
 function resolveSellPrompt(
   queryPrompt: string | undefined,
   body: string,
 ): string {
-  if (typeof queryPrompt === "string" && queryPrompt.length > 0) return queryPrompt;
+  if (queryPrompt !== undefined) return queryPrompt;
   try {
     const parsed = JSON.parse(body) as { prompt?: unknown };
-    if (parsed && typeof parsed.prompt === "string") return parsed.prompt;
+    if (
+      parsed !== null &&
+      typeof parsed === "object" &&
+      !Array.isArray(parsed) &&
+      typeof parsed.prompt === "string"
+    ) {
+      return parsed.prompt;
+    }
+    return "";
   } catch {
-    /* raw body fallback */
+    return body;
   }
-  return body;
 }
 
 /**

@@ -376,6 +376,43 @@ test("gate-2 #1: delivery error mapping — rejected vs retry vs generic", async
   assert.equal(classifyDeliveryError(new Error("something else")), null);
 });
 
+test("gate-4 #1: JSON-shaped prompts parse their tool and filters", () => {
+  // quoted key-colon-value (a JSON object used as the prompt)
+  assert.deepEqual(parseRequest('{"tool":"get_cross_issuer","underlying":"NVDA"}'), {
+    tool: "get_cross_issuer",
+    args: { underlying: "NVDA" },
+  });
+  // quoted filter key must NOT silently drop the filter
+  assert.deepEqual(parseRequest('{"prompt":"gap","token_symbol":"NVDA"}'), {
+    tool: "get_spread",
+    args: { token_symbol: "NVDA" },
+  });
+});
+
+test("gate-4 #2: validateSellRequest matches the SDK promptFrom exactly", () => {
+  // empty query prompt IS defined -> the SDK uses "" -> no 400 from us
+  assert.equal(validateSellRequest("", '{"prompt":"tool: drain_wallet"}'), null);
+  // JSON body without a string prompt -> the SDK uses "" -> no 400
+  assert.equal(validateSellRequest(undefined, '{"prompt":null,"note":"tool: x"}'), null);
+  // non-object JSON body -> the SDK uses "" -> no 400
+  assert.equal(validateSellRequest(undefined, '["tool: x"]'), null);
+  // raw body is used only when JSON.parse throws -> still validated
+  assert.match(validateSellRequest(undefined, "tool: drain_wallet"), /unknown tool drain_wallet/);
+});
+
+test("gate-4 #3: prose punctuation never breaks a valid filter", () => {
+  assert.deepEqual(parseRequest("spread for (token_symbol: NVDA)"), {
+    tool: "get_spread",
+    args: { token_symbol: "NVDA" },
+  });
+  assert.deepEqual(parseRequest("token_symbol: 'NVDA'"), {
+    tool: "get_spread",
+    args: { token_symbol: "NVDA" },
+  });
+  // trailing '.'/'-' is still rejected
+  assert.throws(() => parseRequest("token_symbol: NVDA."), /bad token_symbol/);
+});
+
 test("gate-2 #7 / gate-3 #3: validateSellRequest mirrors the SDK prompt precedence", () => {
   // query-string prompt is checked (the SDK reads it FIRST)
   assert.match(validateSellRequest("tool: drain_wallet", ""), /unknown tool drain_wallet/);
