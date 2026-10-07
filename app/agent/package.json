@@ -4,6 +4,10 @@
   "private": true,
   "description": "The stockgapseller Agent (sole signer, value layer).",
   "type": "module",
+  "files": [
+    "dist",
+    "studio.toml"
+  ],
   "engines": {
     "node": ">=22"
   },

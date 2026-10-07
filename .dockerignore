@@ -1,13 +1,16 @@
-# Secrets and build junk never enter the image or its build context.
 .git
-.studio
-**/.studio
-.env
-.env.*
-**/.env.*
+**/.git
 node_modules
 **/node_modules
+dist
 **/dist
+# secrets / env never enter the build context (gate-1 finding 9)
+.env
+**/.env
+.env.*
+**/.env.*
+.studio
+**/.studio
+**/*.log
 docs
-agentcore
-*.log
+**/docs
