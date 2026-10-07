@@ -93,7 +93,11 @@ import {
   withTimeout,
 } from "./deliveryPolicy.js";
 import * as signing from "./signing.js";
-import { runWork as sellerRunWork } from "./sellerCore.js";
+import {
+  runWork as sellerRunWork,
+  classifyDeliveryError,
+  precheckUnknownTool,
+} from "./sellerCore.js";
 import { READ_TOOL_CATALOG, type ReadToolName } from "./readToolCatalog.js";
 
 const APP_NAME = "agent";
@@ -502,6 +506,18 @@ export function buildMcpServer(
             reason: "seller wallet does not support result submission",
           });
         }
+        // Gate-2 finding 1: permanent input errors are rejected outright and
+        // classified work failures retry with their reason — only unknown
+        // errors keep the generic masked protocol failure, so a funded job
+        // is never told to retry forever until escrow expires.
+        const mapped = classifyDeliveryError(e);
+        if (mapped) {
+          return toolResult({
+            status: mapped.status,
+            job_id: jid,
+            reason: mapped.reason,
+          });
+        }
         return protocolFailure(`delivery of job ${jid} failed`, e);
       }
 
@@ -701,6 +717,13 @@ async function main(): Promise<void> {
         } catch (error) {
           res.status(isCommerceRateLimitError(error) ? 429 : 503)
             .json({ error: "seller request limit reached" });
+          return;
+        }
+        // Gate-2 finding 7: an unknown `tool:` is a client error — answer 400
+        // BEFORE any payment or settlement path can see the request.
+        const badTool = precheckUnknownTool(request.body ?? "");
+        if (badTool) {
+          res.status(400).json({ error: badTool });
           return;
         }
         const out = await seller.handle(request);

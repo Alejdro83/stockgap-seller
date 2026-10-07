@@ -1,5 +1,5 @@
 /**
- * StockGap seller work hook — PRODUCTION (Bloque 2, 2026-10-07; gate-1 fixes).
+ * StockGap seller work hook — PRODUCTION (Bloque 2, 2026-10-07; gate-1 + gate-2 fixes).
  *
  * The deliverable is a REAL gap report fetched from OUR StockGap MCP service
  * (`POST /mcp`, JSON-RPC 2.0 `tools/call`). Deterministic by design: no LLM
@@ -26,6 +26,11 @@
  * `signing.submitResult` with an error payload, and a paid job stays open
  * for retry/refund instead of being signed off as done. Only `status:"ok"`
  * produces a deliverable string.
+ *
+ * Error taxonomy (gate-2 finding 1): `InvalidRequestError` = permanent input
+ * error (the ERC-8183 answer is `rejected`, never retried until escrow
+ * expiry); `GapReportError` = classified work outcome (the answer is `retry`
+ * with the classified reason). `classifyDeliveryError()` maps both.
  *
  * Configuration:
  *   STOCKGAP_MCP_URL          upstream MCP endpoint (default http://localhost:8098/mcp)
@@ -100,6 +105,14 @@ export class GapReportError extends Error {
     );
     this.name = "GapReportError";
     this.report = report;
+  }
+}
+
+/** Permanent input error — the job must be rejected, never retried. */
+export class InvalidRequestError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidRequestError";
   }
 }
 
@@ -248,12 +261,15 @@ export function classifyUpstream(call: UpstreamCall): UpstreamStatus {
   if (call.httpStatus === 402) return "payment_required";
   if (call.httpStatus >= 200 && call.httpStatus < 300) {
     try {
-      const parsed = JSON.parse(call.response) as {
-        result?: { isError?: boolean } | null;
-      };
-      if (!parsed || parsed.result === undefined) return "upstream_error";
+      const parsed = JSON.parse(call.response) as { result?: unknown };
+      // A JSON-RPC result must be a non-null object (gate-2 finding 6).
+      if (!parsed || typeof parsed.result !== "object" || parsed.result === null) {
+        return "upstream_error";
+      }
       // MCP reports tool failures as HTTP 200 + result.isError (gate-1 #2).
-      if (parsed.result?.isError === true) return "upstream_error";
+      if ((parsed.result as { isError?: boolean }).isError === true) {
+        return "upstream_error";
+      }
       return "ok";
     } catch {
       return "upstream_error";
@@ -262,36 +278,86 @@ export function classifyUpstream(call: UpstreamCall): UpstreamStatus {
   return "upstream_error";
 }
 
+const TOOL_RE = /\btool\s*[:=]\s*([a-z_][a-z0-9_]*)\b/i;
+
 /**
  * Work prompt → tool request. Deterministic parsing only:
  *   "tool: get_oracle_latest"  — allowlisted tool (default `get_spread`);
- *                                unknown tool names are an invalid_request,
+ *                                unknown tool names are an InvalidRequestError,
  *                                never a silent fallback (gate-1 #6)
  *   "token_symbol: NVDA"       — get_spread filter (its namespace only)
  *   "underlying: NVDA"         — get_cross_issuer / get_oracle_latest filter
  * Filter keys are NEVER remapped across namespaces (gate-1 #6): a key of the
  * other namespace is ignored, so `underlying: NVDA` alone yields an
- * unfiltered `get_spread`, not `get_spread {token_symbol:"NVDA"}`.
+ * unfiltered `get_spread`, not `get_spread {token_symbol:"NVDA"}`. A filter
+ * value that is malformed or truncated is an InvalidRequestError (gate-2 #5):
+ * `token_symbol: 1INCH` and `token_symbol: ABCDEFGHIJKL-X` never silently
+ * degrade into an unfiltered or wrong report.
  */
 export function parseRequest(prompt: string): {
   tool: StockgapTool;
   args: Record<string, unknown>;
 } {
-  const toolMatch = /\btool\s*[:=]\s*([a-z_][a-z0-9_]*)\b/i.exec(prompt);
+  const toolMatch = TOOL_RE.exec(prompt);
   let tool: StockgapTool = "get_spread";
   if (toolMatch) {
     const wanted = toolMatch[1].toLowerCase();
     if (!isStockgapTool(wanted)) {
-      throw new Error(`invalid_request: unknown tool ${wanted}`);
+      throw new InvalidRequestError(`invalid_request: unknown tool ${wanted}`);
     }
     tool = wanted;
   }
+  return { tool, args: toolArgs(tool, parseFilter(tool, prompt)) };
+}
+
+/** Filter value of THIS tool's namespace only (gate-1 #6, gate-2 #5). */
+function parseFilter(
+  tool: StockgapTool,
+  prompt: string,
+): string | undefined {
   const key = FILTER_KEY[tool];
-  const filterMatch = new RegExp(
-    `\\b${key}\\s*[:=]\\s*([A-Za-z][A-Za-z0-9._-]{0,11})\\b`,
+  const keyHit = new RegExp(`\\b${key}\\s*[:=]`, "i").test(prompt);
+  if (!keyHit) return undefined;
+  // The value must be a well-formed symbol AND fully consumed (negative
+  // lookahead) — otherwise the request is invalid, not silently filterless.
+  const match = new RegExp(
+    `\\b${key}\\s*[:=]\\s*([A-Za-z][A-Za-z0-9._-]{0,11})(?![A-Za-z0-9._-])`,
     "i",
   ).exec(prompt);
-  return { tool, args: toolArgs(tool, filterMatch?.[1]) };
+  if (!match) throw new InvalidRequestError(`invalid_request: bad ${key}`);
+  return match[1];
+}
+
+/**
+ * Cheap pre-check for the x402/b402 face (gate-2 finding 7): an unknown
+ * `tool:` in the raw request body is answered 400 BEFORE any payment or
+ * settlement path can see a request that can never succeed.
+ */
+export function precheckUnknownTool(body: string): string | null {
+  const match = TOOL_RE.exec(body);
+  if (match && !isStockgapTool(match[1].toLowerCase())) {
+    return `invalid_request: unknown tool ${match[1].toLowerCase()}`;
+  }
+  return null;
+}
+
+/**
+ * Map a work failure to its ERC-8183 delivery answer (gate-2 finding 1):
+ * permanent input errors are `rejected` (never retried until escrow expiry);
+ * `GapReportError` outcomes are `retry` with the classified reason; anything
+ * else returns null and the caller keeps its generic masked failure path.
+ */
+export function classifyDeliveryError(e: unknown): {
+  status: "rejected" | "retry";
+  reason: string;
+} | null {
+  if (e instanceof InvalidRequestError) {
+    return { status: "rejected", reason: "invalid_request" };
+  }
+  if (e instanceof GapReportError) {
+    return { status: "retry", reason: e.report.status };
+  }
+  return null;
 }
 
 const PAYMENT_NOTE =
@@ -301,10 +367,10 @@ const PAYMENT_NOTE =
 /**
  * The delivery hook used by `mcpMain.main()` and `notify_funded`: produce the
  * StockGap gap report deliverable. GATE-1 HIGH: throws `GapReportError` on
- * every non-OK outcome (402 / transport error / MCP tool error / invalid
- * request) so an error payload can never be signed as completed work; the
- * envelope rides on `error.report` for logs and evidence. Caller aborts
- * propagate untouched.
+ * every non-OK outcome (402 / transport error / MCP tool error) and
+ * `InvalidRequestError` on bad input, so an error payload can never be
+ * signed as completed work; the envelope rides on `error.report` for logs
+ * and evidence. Caller aborts propagate untouched.
  */
 export const runWork: RunWork = async (prompt, context) => {
   const { tool, args } = parseRequest(prompt);

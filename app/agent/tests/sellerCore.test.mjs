@@ -1,7 +1,7 @@
 /**
- * Deterministic tests for the StockGap seller work hook (Bloque 2, gate-1
- * fixes). No LLM, no chain, no network: fetch is simulated. Run: `pnpm test`
- * (builds tsc output first; assertions run against dist/).
+ * Deterministic tests for the StockGap seller work hook (Bloque 2; gate-1 +
+ * gate-2 fixes). No LLM, no chain, no network: fetch is simulated. Run:
+ * `pnpm test` (builds tsc output first; assertions run against dist/).
  *
  * Short upstream timeout so the timeout-classification test is fast.
  */
@@ -15,8 +15,11 @@ const {
   callStockgapTool,
   parseRequest,
   classifyUpstream,
+  classifyDeliveryError,
+  precheckUnknownTool,
   STOCKGAP_TOOLS,
   GapReportError,
+  InvalidRequestError,
 } = await import("../dist/sellerCore.js");
 
 function mockFetch(handler) {
@@ -131,6 +134,19 @@ test("gate-1 #2: HTTP 200 with result.isError=true is upstream_error (throws)", 
   }
 });
 
+test("gate-2 #6: HTTP 200 with result:null is upstream_error", () => {
+  assert.equal(
+    classifyUpstream({
+      url: "u",
+      tool: "get_spread",
+      request: "{}",
+      response: JSON.stringify({ jsonrpc: "2.0", id: 1, result: null }),
+      httpStatus: 200,
+    }),
+    "upstream_error",
+  );
+});
+
 test("gate-1 #3: caller abort propagates, never becomes a deliverable", async () => {
   const controller = new AbortController();
   controller.abort(new Error("caller abort"));
@@ -182,6 +198,76 @@ test("gate-1 #3: timeout is recorded as transport_error 'timeout'", async () => 
   }
 });
 
+test("gate-2 #4: oversized upstream body is response_too_large (with and without content-length)", async () => {
+  const big = new Uint8Array(2 * 1024 * 1024);
+  // without content-length: streamed body over the 1 MiB cap
+  let restore = mockFetch(async () => new Response(big, { status: 200 }));
+  try {
+    await assert.rejects(
+      () => runWork("gap report", { sessionId: "t-cap1" }),
+      (err) => {
+        assert.ok(err instanceof GapReportError);
+        assert.match(JSON.stringify(err.report.upstream.result), /response_too_large/);
+        return true;
+      },
+    );
+  } finally {
+    restore();
+  }
+  // with a declared content-length over the cap
+  restore = mockFetch(
+    async () =>
+      new Response(big, {
+        status: 200,
+        headers: { "content-length": String(big.byteLength) },
+      }),
+  );
+  try {
+    await assert.rejects(
+      () => runWork("gap report", { sessionId: "t-cap2" }),
+      (err) => {
+        assert.ok(err instanceof GapReportError);
+        assert.match(JSON.stringify(err.report.upstream.result), /response_too_large/);
+        return true;
+      },
+    );
+  } finally {
+    restore();
+  }
+});
+
+test("gate-2 #4: evidence sink appends rows and stops past the 5 MiB cap", async () => {
+  const { mkdtempSync, writeFileSync, readFileSync } = await import("node:fs");
+  const dir = mkdtempSync("/tmp/sg-evidence-");
+  const prev = process.env.SELLER_EVIDENCE_DIR;
+  process.env.SELLER_EVIDENCE_DIR = dir;
+  const restore = mockFetch(async () =>
+    jsonResponse(200, {
+      jsonrpc: "2.0",
+      id: 1,
+      result: { content: [], isError: false },
+    }),
+  );
+  try {
+    await runWork("gap report", { sessionId: "t-ev1" });
+    const file = `${dir}/upstream_calls.jsonl`;
+    const first = readFileSync(file, "utf8");
+    assert.equal(first.trim().split("\n").length, 1);
+    // the upstream URL lives in the evidence row (and only there)
+    assert.ok(JSON.parse(first.split("\n")[0]).url);
+    // exceed the cap -> no further rows appended (byte-identical file)
+    const filler = "x".repeat(5 * 1024 * 1024 + 1);
+    writeFileSync(file, first + filler);
+    await runWork("gap report", { sessionId: "t-ev2" });
+    const after = readFileSync(file, "utf8");
+    assert.equal(after, first + filler);
+  } finally {
+    restore();
+    if (prev === undefined) delete process.env.SELLER_EVIDENCE_DIR;
+    else process.env.SELLER_EVIDENCE_DIR = prev;
+  }
+});
+
 test("gate-1 #6: prompt parses per-tool filter key, no cross-namespace remap", async () => {
   assert.deepEqual(parseRequest("tool: get_oracle_latest underlying: NVDA"), {
     tool: "get_oracle_latest",
@@ -222,8 +308,30 @@ test("gate-1 #6: prompt parses per-tool filter key, no cross-namespace remap", a
   }
 });
 
+test("gate-2 #5: malformed or truncated filter values are invalid_request", () => {
+  // digit-leading symbol cannot match the value grammar -> explicit error
+  assert.throws(() => parseRequest("token_symbol: 1INCH"), (err) => {
+    assert.ok(err instanceof InvalidRequestError);
+    assert.match(err.message, /bad token_symbol/);
+    return true;
+  });
+  // over-long value must NOT be silently truncated at the '-' boundary
+  assert.throws(
+    () => parseRequest("token_symbol: ABCDEFGHIJKL-X"),
+    /bad token_symbol/,
+  );
+  // dotted symbols stay accepted
+  assert.deepEqual(parseRequest("token_symbol: NVDA.US"), {
+    tool: "get_spread",
+    args: { token_symbol: "NVDA.US" },
+  });
+});
+
 test("gate-1 #6: unknown tool is an invalid_request throw, never a fallback", async () => {
-  assert.throws(() => parseRequest("tool: drain_wallet"), /invalid_request/);
+  assert.throws(() => parseRequest("tool: drain_wallet"), (err) => {
+    assert.ok(err instanceof InvalidRequestError);
+    return true;
+  });
   const restore = mockFetch(async () => {
     throw new Error("fetch must not be reached");
   });
@@ -235,6 +343,42 @@ test("gate-1 #6: unknown tool is an invalid_request throw, never a fallback", as
   } finally {
     restore();
   }
+});
+
+test("gate-2 #1: delivery error mapping — rejected vs retry vs generic", async () => {
+  assert.deepEqual(
+    classifyDeliveryError(new InvalidRequestError("invalid_request: unknown tool x")),
+    { status: "rejected", reason: "invalid_request" },
+  );
+  let gapErr;
+  const restore = mockFetch(async () =>
+    jsonResponse(402, { x402Version: 1, error: "payment required" }),
+  );
+  try {
+    await runWork("gap report", { sessionId: "t-map" });
+  } catch (e) {
+    gapErr = e;
+  } finally {
+    restore();
+  }
+  assert.ok(gapErr instanceof GapReportError);
+  assert.deepEqual(classifyDeliveryError(gapErr), {
+    status: "retry",
+    reason: "payment_required",
+  });
+  assert.equal(classifyDeliveryError(new Error("something else")), null);
+});
+
+test("gate-2 #7: precheckUnknownTool rejects unknown tools in raw bodies", () => {
+  assert.match(
+    precheckUnknownTool('{"prompt":"tool: drain_wallet"}'),
+    /unknown tool drain_wallet/,
+  );
+  assert.equal(
+    precheckUnknownTool('{"prompt":"tool: get_spread token_symbol: NVDA"}'),
+    null,
+  );
+  assert.equal(precheckUnknownTool('{"prompt":"gap report please"}'), null);
 });
 
 test("callStockgapTool rejects tools outside the allowlist", async () => {
