@@ -113,8 +113,10 @@ tests en `app/agent/tests/sellerCore.test.mjs` para que no cambien en silencio:
   pegado al escape corta el valor ahí. Fijado por el test
   *"accepted residual: an escape INSIDE a value cuts it at the escape (pinned)"*.
 - Puntuación mixta `NV",'DA` → `NV`: aceptada; arreglarla rompería el paso
-  válido `"NVDA","x"` (separadores JSON entre valores citados). Fijado por el
-  test *"gate-8 #1: quote runs cut the value loudly"* y su caso espinoso.
+  válido `"NVDA","x"` (separadores JSON entre valores citados; ese caso lo fija
+  el test *"gate-7 #1: runs of punctuation still truncate loudly"*). El
+  residual en sí está fijado por el test *"accepted residual: an escape INSIDE
+  a value cuts it at the escape (pinned)"*.
 - **Rationale**: los símbolos de ticker nunca contienen backslashes ni comillas
   — cualquier aparición de esos caracteres junto a un valor es puntuación de
   envoltorio (JSON/prosa) o entrada corrupta, nunca parte del símbolo.

@@ -458,6 +458,11 @@ test("accepted residual: an escape INSIDE a value cuts it at the escape (pinned)
     tool: "get_spread",
     args: { token_symbol: "NV" },
   });
+  // the mixed-punctuation run residual is pinned here too (gate-11 #1)
+  assert.deepEqual(parseRequest("token_symbol: NV\",'DA"), {
+    tool: "get_spread",
+    args: { token_symbol: "NV" },
+  });
 });
 
 test("gate-8 #1: quote runs cut the value loudly", () => {
