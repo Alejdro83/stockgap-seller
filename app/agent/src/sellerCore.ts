@@ -279,7 +279,7 @@ export function classifyUpstream(call: UpstreamCall): UpstreamStatus {
 }
 
 const TOOL_RE =
-  /(?:^|[^A-Za-z0-9_.\\"'-])\\*["']?tool\\*["']?\s*[:=]\s*\\*["']?([^\s,;"'()\[\]{}<>&\\]*)/i;
+  /(?:^|[^\p{L}\p{N}_.\\"'-]|\\[nrt])\\*["']?tool\\*["']?\s*[:=]\s*\\*["']?([^\s,;"'()\[\]{}<>&\\]*)/iu;
 
 /**
  * Work prompt → tool request. Deterministic parsing only:
@@ -312,14 +312,12 @@ export function parseRequest(prompt: string): {
   return { tool, args: toolArgs(tool, parseFilter(tool, prompt)) };
 }
 
-const EXCLUDED_TAIL = /["'()\[\]{}<>&\\,;]/;
-
 /**
  * The token after a key must not have been cut short at excluded punctuation
- * (gate-5 #1, gate-6 #1): when the char right after the match is punctuation
- * AND the one after continues a symbol-ish run, the capture is truncated —
- * reject instead of returning a wrong report. A query-string separator
- * (`&key=`) is accepted (gate-6 #5).
+ * (gate-5 #1, gate-6 #1, gate-7 #1): a run of punctuation (or one bare quote)
+ * directly followed by a symbol char means the capture is truncated — reject
+ * instead of returning a wrong report. A query-string separator (`&key=`) is
+ * accepted (gate-6 #5).
  */
 function assertFullToken(
   key: string,
@@ -327,11 +325,12 @@ function assertFullToken(
   prompt: string,
 ): void {
   const tailAt = hit.index + hit[0].length;
-  const tail = prompt[tailAt];
-  if (tail === undefined) return;
-  const after = prompt.slice(tailAt + 1);
-  if (tail === "&" && /^[A-Za-z_][A-Za-z0-9_]*\s*=/.test(after)) return;
-  if (EXCLUDED_TAIL.test(tail) && /[A-Za-z0-9._-]/.test(after[0] ?? "")) {
+  let rest = prompt.slice(tailAt);
+  // A query-string separator is a real separator (gate-6 #5).
+  if (/^&[A-Za-z_][A-Za-z0-9_]*\s*=/.test(rest)) return;
+  // Strip one closing-quote level (gate-7 #1), mirroring the key side.
+  rest = rest.replace(/^\\*["']?/, "");
+  if (/^(?:[,;()\[\]{}<>&\\]*|["'])[A-Za-z0-9._-]/.test(rest)) {
     throw new InvalidRequestError(`invalid_request: bad ${key}`);
   }
 }
@@ -348,8 +347,8 @@ function parseFilter(
   // silently skipped when the key repeats. Quotes (JSON-shaped prompts) and
   // prose punctuation around the value are tolerated (gate-4 #1, #3).
   const hit = new RegExp(
-    `(?:^|[^A-Za-z0-9_.\\\\"'-])\\\\*["']?${key}\\\\*["']?\\s*[:=]\\s*\\\\*["']?([^\\s,;"'()\\[\\]{}<>&\\\\]*)`,
-    "i",
+    `(?:^|[^\\p{L}\\p{N}_.\\\\"'-]|\\\\[nrt])\\\\*["']?${key}\\\\*["']?\\s*[:=]\\s*\\\\*["']?([^\\s,;"'()\\[\\]{}<>&\\\\]*)`,
+    "iu",
   ).exec(prompt);
   if (!hit) return undefined;
   const token = hit[1];

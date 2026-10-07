@@ -376,6 +376,54 @@ test("gate-2 #1: delivery error mapping — rejected vs retry vs generic", async
   assert.equal(classifyDeliveryError(new Error("something else")), null);
 });
 
+test("gate-7 #1: runs of punctuation still truncate loudly", () => {
+  for (const p of [
+    "token_symbol: NV,,DA",
+    "token_symbol: NV;;DA",
+    "token_symbol: NV()DA",
+    'token_symbol: NV""DA',
+    "token_symbol: NV\\\\DA",
+    "tool: get_oracle_latest;;v2",
+  ]) {
+    assert.throws(() => parseRequest(p), /bad (?:token_symbol|tool)/, p);
+  }
+  // valid separators still pass at both escaping levels
+  assert.deepEqual(parseRequest('token_symbol: "NVDA","x"'), {
+    tool: "get_spread",
+    args: { token_symbol: "NVDA" },
+  });
+  assert.deepEqual(parseRequest(String.raw`token_symbol: \\\"NVDA\\\",\\\"x`), {
+    tool: "get_spread",
+    args: { token_symbol: "NVDA" },
+  });
+});
+
+test("gate-7 #2: non-ASCII letters are not key starts", () => {
+  assert.deepEqual(parseRequest("étool: get_oracle_latest"), {
+    tool: "get_spread",
+    args: {},
+  });
+  assert.deepEqual(parseRequest("tool: get_cross_issuer ñunderlying: NVDA"), {
+    tool: "get_cross_issuer",
+    args: {},
+  });
+  assert.deepEqual(parseRequest("мtoken_symbol: NVDA"), {
+    tool: "get_spread",
+    args: {},
+  });
+});
+
+test("gate-7 #3: keys after literal escape sequences are found", () => {
+  assert.deepEqual(parseRequest(String.raw`hi\ntool: get_oracle_latest`), {
+    tool: "get_oracle_latest",
+    args: {},
+  });
+  assert.deepEqual(
+    parseRequest(String.raw`{\"prompt\":\"x\\ntool: get_cross_issuer\",\"underlying\":\"NVDA\"}`),
+    { tool: "get_cross_issuer", args: { underlying: "NVDA" } },
+  );
+});
+
 test("gate-6 #1: values cut short at ',' or ';' are invalid_request", () => {
   for (const p of ["token_symbol: NV,DA", "token_symbol: NV;DA", "token_symbol:NVDA,TSLA"]) {
     assert.throws(() => parseRequest(p), /bad token_symbol/, p);
