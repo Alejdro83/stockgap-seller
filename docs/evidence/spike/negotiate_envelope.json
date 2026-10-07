@@ -1,0 +1,32 @@
+{
+  "request": {
+    "task_description": "StockGap gap report for NVDA",
+    "terms": {
+      "deliverables": "JSON gap report",
+      "quality_standards": "verbatim rows",
+      "evaluation_required": true,
+      "evaluator_type": "uma_oov3",
+      "currency": "0xc70B8741B8B07A6d61E54fd4B20f22Fa648E5565"
+    }
+  },
+  "request_hash": "0xeb12f40edad85e1d9ef70957af1aa281e60769dc1801e7a4882e5b565f13e0f4",
+  "response": {
+    "accepted": true,
+    "terms": {
+      "deliverables": "JSON gap report",
+      "quality_standards": "verbatim rows",
+      "evaluation_required": true,
+      "evaluator_type": "uma_oov3",
+      "price": "100000000000000000",
+      "currency": "0xc70B8741B8B07A6d61E54fd4B20f22Fa648E5565"
+    },
+    "estimated_completion_seconds": 600,
+    "quote_expires_at": 1791339218,
+    "negotiated_at": 1791338318
+  },
+  "response_hash": "0x165c6a6535e344cdf16eff704d8db4a034a78abc9ec9012cbea4181df0f75313",
+  "negotiation_hash": "0x1b025ce38e6afc78df4f388bb30e7f09ddf2cf764c01ae43523e321190e1788b",
+  "provider_sig": "0xb98c8cdc32afea85d08a596e42ae8c2c2cd5bf14582c57169b33e7510eb77d804842eea4914cb14df7fc7d2dbdf2c3b45ca81e81923511b38e4eeea601fe799b1c",
+  "chain_id": 97,
+  "verifying_contract": "0xa206c0517B6371C6638CD9e4a42Cc9f02A33B0DE"
+}

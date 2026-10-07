@@ -1,0 +1,133 @@
+
+BNB Agent SDK Networks & Contracts
+          Skip to content
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+                    Documentation
+            Initializing search
+    BNB Chain GitHub
+  Home
+  Announcements
+  BNB Smart Chain
+  opBNB
+  BNB Greenfield
+  Developer Kit
+  BNB Chain Fusion
+  FAQ
+    Documentation
+    BNB Chain GitHub
+    Home
+    Announcements
+    BNB Smart Chain
+    opBNB
+    BNB Greenfield
+    Developer Kit
+    Developer Kit
+    BNB Agent Studio
+    BNB Agent Studio
+    Quickstart
+    Demo
+    Architecture
+    Configuration
+    CLI Reference
+    Deployment
+    Security
+    Troubleshooting
+    BNB Agent SDK
+    BNB Agent SDK
+    Quickstart (TypeScript)
+    Quickstart (Python)
+    Configuration
+    Architecture
+    Networks & Contracts
+    Networks & Contracts
+      Table of contents
+        Network & Contracts
+        Supported networks
+    Examples
+    Security
+    Troubleshooting
+    Greenfield SDK
+    Greenfield SDK
+    MCP & Ask AI
+    MCP & Ask AI
+    Ask AI
+    VS Code guide
+    MPP SDK
+    MPP SDK
+    Quickstart
+    Architecture
+    Replay Store
+    Examples
+    Scaled UI Amount (ERC-8056)
+    Scaled UI Amount (ERC-8056)
+    Demo
+    Privacy at Scale
+    Privacy at Scale
+    BNB Chain Fusion
+    FAQ
+      Table of contents
+        Network & Contracts
+        Supported networks
+    Home
+    Developer Kit
+    BNB Agent SDK
+Networks & Contracts
+Network & Contracts
+¶
+Deployed contract addresses are 
+not listed in this documentation
+. Use the upstream repositories as the source of truth:
+Stack
+Source
+ERC-8183 / APEX
+ (AgenticCommerce, EvaluatorRouter, OptimisticPolicy)
+apex-contracts#deployments
+ERC-8004 Identity Registry
+bnbagent-sdk
+ — network defaults and 
+ERC8004_REGISTRY_ADDRESS
+ override
+The SDK resolves commerce-related addresses at runtime from its network presets and optional environment overrides. See 
+Configuration
+.
+Supported networks
+¶
+Network
+Chain ID
+BSC Testnet
+97
+BSC Mainnet
+56
+Testnet gas
+: 
+BSC Faucet
+ (tBNB) for general on-chain operations.
+ERC-8004 registration
+: Gas-sponsored on BSC Testnet and BSC Mainnet via 
+MegaFuel paymaster
+.
+← BNB Agent SDK overview
+June 19, 2026
+  Back to top
+        Ask AI
+Cookie consent
+We use cookies to recognize your repeated visits and preferences, as well as to measure the effectiveness of our documentation and whether users find what they're searching for. With your consent, you're helping us to make our documentation better.
+      Google Analytics
+      GitHub
+Accept
+Manage settings
