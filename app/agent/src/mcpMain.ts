@@ -747,6 +747,12 @@ async function main(): Promise<void> {
     await transport.handleRequest(req, res, req.body);
   });
 
+  // Container liveness/readiness (Northflank readinessProbe on /health):
+  // public, constant, secret-free.
+  app.get("/health", (_req, res) => {
+    res.status(200).json({ ok: true });
+  });
+
   app.listen(port, host, () => {
     log.info(`MCP serving on ${host}:${port}/mcp`);
   });

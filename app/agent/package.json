@@ -9,7 +9,8 @@
   },
   "scripts": {
     "dev": "tsx src/mcpMain.ts",
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "pnpm run build && node --test tests/sellerCore.test.mjs"
   },
   "dependencies": {
     "@bnbagent/studio-runtime": "0.0.14",

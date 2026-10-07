@@ -41,7 +41,14 @@ allowed_payment_tokens = ["U","USDC","USDT"]
 
 [payments.seller]
 # 所有 Seller rail 与已配置资产共用同一个 USD 标价；"0" 表示 FREE。
-price_usd = "0.10"
+# BLOQUE 2 mode (2026-10-07): price_usd = "0" = FREE serve mode — the x402
+# free-route is the ONLY runtime path that serves the get_spread gap report
+# without B402 merchant credentials (A11 cut) or a funded ERC-8183 job, and
+# "sirviendo get_spread" is the hard N15 checkpoint of this block. The PAID
+# economy (price_usd = "0.10" + mainnet assets/network) is restored in
+# Bloque 3's mainnet switch for the payment demo — one config line + redeploy
+# of THIS service (stockgap-app is never touched).
+price_usd = "0"
 # 使用当前网络的 canonical AssetId；顺序会保留，允许改为任意非空子集。
 # 这里只列出当前 ERC-8183 合约栈能托管的资产。要卖更多币种，需要指向
 # 支持多 token 的部署（同时设置三个 ERC8183_*_ADDRESS），再把资产加回来。

@@ -1,0 +1,13 @@
+# Secrets and build junk never enter the image or its build context.
+.git
+.studio
+**/.studio
+.env
+.env.*
+**/.env.*
+node_modules
+**/node_modules
+**/dist
+docs
+agentcore
+*.log
