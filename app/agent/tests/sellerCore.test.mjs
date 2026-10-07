@@ -430,6 +430,42 @@ test("gate-6 #1: values cut short at ',' or ';' are invalid_request", () => {
   }
 });
 
+test("gate-8 #1: quote runs cut the value loudly", () => {
+  for (const p of ['token_symbol: NV"""DA', "token_symbol: NV\"'\"DA", 'token_symbol: NV",,DA']) {
+    assert.throws(() => parseRequest(p), /bad token_symbol/, p);
+  }
+});
+
+test("gate-8 #2: literal escapes separate keys (multi-key prompts)", () => {
+  assert.deepEqual(parseRequest(String.raw`tool: get_oracle_latest\nunderlying: NVDA`), {
+    tool: "get_oracle_latest",
+    args: { underlying: "NVDA" },
+  });
+  assert.deepEqual(parseRequest(String.raw`token_symbol: NVDA\r\n`), {
+    tool: "get_spread",
+    args: { token_symbol: "NVDA" },
+  });
+});
+
+test("gate-8 MED: literal escapes between key and value never pollute the value", () => {
+  assert.deepEqual(parseRequest(String.raw`token_symbol:\nNVDA`), {
+    tool: "get_spread",
+    args: { token_symbol: "NVDA" },
+  });
+  assert.deepEqual(parseRequest(String.raw`tool:\nget_oracle_latest`), {
+    tool: "get_oracle_latest",
+    args: {},
+  });
+});
+
+test("gate-8 #4: combining marks are not key starts", () => {
+  // decomposed NFD: 'cafe' + U+0301 + 'tool'
+  assert.deepEqual(parseRequest("cafe\u0301tool: get_oracle_latest"), {
+    tool: "get_spread",
+    args: {},
+  });
+});
+
 test("gate-6 #2: suffixed tool names hit the allowlist as unknown tools", () => {
   assert.throws(() => parseRequest("tool: get_spread-v2"), /unknown tool get_spread-v2/);
   assert.throws(() => parseRequest("tool: get_oracle_latest.v2"), /unknown tool/);

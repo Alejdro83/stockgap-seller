@@ -279,7 +279,7 @@ export function classifyUpstream(call: UpstreamCall): UpstreamStatus {
 }
 
 const TOOL_RE =
-  /(?:^|[^\p{L}\p{N}_.\\"'-]|\\[nrt])\\*["']?tool\\*["']?\s*[:=]\s*\\*["']?([^\s,;"'()\[\]{}<>&\\]*)/iu;
+  /(?:^|[^\p{L}\p{M}\p{N}_.\\"'-]|\\[nrt])\\*["']?tool\\*["']?\s*[:=](?:\s|\\+[nrt])*\\*["']?([^\s,;"'()\[\]{}<>&\\]*)/iu;
 
 /**
  * Work prompt → tool request. Deterministic parsing only:
@@ -328,9 +328,15 @@ function assertFullToken(
   let rest = prompt.slice(tailAt);
   // A query-string separator is a real separator (gate-6 #5).
   if (/^&[A-Za-z_][A-Za-z0-9_]*\s*=/.test(rest)) return;
+  // A literal escape sequence is a separator between keys (gate-8 #2) —
+  // ticker symbols never contain a backslash, so this cannot hide a cut.
+  if (/^\\*["']?\\+[nrt]/.test(rest)) return;
   // Strip one closing-quote level (gate-7 #1), mirroring the key side.
   rest = rest.replace(/^\\*["']?/, "");
-  if (/^(?:[,;()\[\]{}<>&\\]*|["'])[A-Za-z0-9._-]/.test(rest)) {
+  // A run of punctuation/quotes/backslashes directly followed by a symbol
+  // char means the token was cut short (gate-5 #1, gate-6 #1, gate-7 #1,
+  // gate-8 #1).
+  if (/^(?:[,;()\[\]{}<>&\\]*|["'\\]+)[A-Za-z0-9._-]/.test(rest)) {
     throw new InvalidRequestError(`invalid_request: bad ${key}`);
   }
 }
@@ -347,7 +353,7 @@ function parseFilter(
   // silently skipped when the key repeats. Quotes (JSON-shaped prompts) and
   // prose punctuation around the value are tolerated (gate-4 #1, #3).
   const hit = new RegExp(
-    `(?:^|[^\\p{L}\\p{N}_.\\\\"'-]|\\\\[nrt])\\\\*["']?${key}\\\\*["']?\\s*[:=]\\s*\\\\*["']?([^\\s,;"'()\\[\\]{}<>&\\\\]*)`,
+    `(?:^|[^\\p{L}\\p{M}\\p{N}_.\\\\"'-]|\\\\[nrt])\\\\*["']?${key}\\\\*["']?\\s*[:=](?:\\s|\\\\+[nrt])*\\\\*["']?([^\\s,;"'()\\[\\]{}<>&\\\\]*)`,
     "iu",
   ).exec(prompt);
   if (!hit) return undefined;
