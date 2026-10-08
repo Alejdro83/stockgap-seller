@@ -22,3 +22,6 @@ dist/
 
 # Skills installed at workspace root (regeneratable via `bag skills install`).
 .claude/skills/
+
+# Stray MCP log at repo root (runtime output, not source).
+youtube_uploader_mcp.log

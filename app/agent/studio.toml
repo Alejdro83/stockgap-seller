@@ -81,6 +81,7 @@ work_timeout_seconds = 60
 # and route_template.
 
 [identity]
-endpoint = "http://localhost:8000/mcp"
-registered_at = "2026-10-07T01:53:21.891Z"
+endpoint = "https://http--stockgap-seller--6h2d2gps9lkr.code.run/mcp"
+registered_at = "2026-10-07T04:16:53.427Z"
 agent_id = 2572
+last_register_tx = "0x0a89ca5bab0b7ad0c191f24a32fdc076d6bfd01e56b972d529213e973b1a126c"
