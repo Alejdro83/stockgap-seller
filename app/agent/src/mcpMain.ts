@@ -92,6 +92,7 @@ import {
   minimumDeliveryWindowSeconds,
   withTimeout,
 } from "./deliveryPolicy.js";
+import { readDeliverable } from "./deliverableRoute.js";
 import * as signing from "./signing.js";
 import {
   runWork as sellerRunWork,
@@ -778,6 +779,22 @@ async function main(): Promise<void> {
   // public, constant, secret-free.
   app.get("/health", (_req, res) => {
     res.status(200).json({ ok: true });
+  });
+
+  // Public, read-only deliverable publication for ERC-8183 (see
+  // deliverableRoute.ts). Reachable at ERC8183_AGENT_URL/job/:id/response.
+  app.get("/erc8183/job/:id/response", async (req, res) => {
+    const dir = process.env.STORAGE_LOCAL_PATH;
+    if (!dir) {
+      res.status(404).json({ error: "not found" });
+      return;
+    }
+    const out = await readDeliverable(dir, String(req.params.id));
+    if (out.status === 200) {
+      res.status(200).type("application/json").send(out.body);
+      return;
+    }
+    res.status(out.status).json({ error: "not available" });
   });
 
   app.listen(port, host, () => {
