@@ -19,15 +19,15 @@ Production (Northflank): `https://http--stockgap-seller--6h2d2gps9lkr.code.run`
 
 ```bash
 curl -s https://http--stockgap-seller--6h2d2gps9lkr.code.run/health      # {"ok":true}
-curl -s "https://http--stockgap-seller--6h2d2gps9lkr.code.run/x402?prompt=get_spread"   # gap report
-# MCP face (streamable HTTP): POST /mcp
+# MCP face (streamable HTTP): POST /mcp  (tools: negotiate, notify_funded, read-only chain tools)
+# Deliverables: GET /erc8183/job/<id>/response
 ```
 
-## Current status (honest)
+The paid rail is **ERC-8183** (the `/x402` route is dormant: no B402 merchant credentials). Flow: `negotiate` (seller-signed quote in U) → buyer `bag erc8183 buy --provider 0x60EAB5FbE65f88abbc5EF49BEac52b4d7Cb8e079 --quote-json <quote> --network bsc-mainnet` → `notify_funded` → the seller submits the report on-chain.
 
-- The deployed seller currently runs in **free mode** (`price_usd = "0"`, testnet assets in `app/agent/studio.toml`); the mainnet paid flow through this agent is **not** switched on.
-- The **mainnet pay-per-call** evidence lives in the main repo, through StockGap's own x402 gate: tx [`0x656e0477…957d`](https://bscscan.com/tx/0x656e0477b5fa3cb0f470c56ef6ec7eb9709047163ae303efb9bcc0a66645957d), see [`docs/evidence/prueba2`](https://github.com/Alejdro83/stockgap-agent/tree/master/docs/evidence/prueba2).
-- An ERC-8183 negotiation was signed on testnet; the funded `bag erc8183 buy` was not completed.
+## Mainnet evidence
+
+Job **56937** on BSC mainnet: a real 0.10 U payment through this agent, delivered and hashed on-chain. Hashes and the honest log of what failed first: [docs/evidence/mainnet-job-56937](./docs/evidence/mainnet-job-56937/NOTES.md). Settlement is optimistic (about 7 days), so the funds are still in escrow.
 
 ## Layout
 
