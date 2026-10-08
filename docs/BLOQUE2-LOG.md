@@ -63,7 +63,7 @@ verbatim en `docs/reviews/` (no es auto-review). Veredicto en el resumen final.
 
 ## 5. Notas de ejecución (cierre de Bloque 2, 2026-10-07)
 
-- **Compradora (D8)**: wallet fresca `0xb9645813b218C573499C5e341BA1DeC6005800ED`
+- **Compradora (D8)**: wallet `0xb9645813b218C573499C5e341BA1DeC6005800ED` (**RETIRADA/legacy** — la compradora D8 vigente es `0xEC62…1BB0`, ver `.studio/buyer/README.txt`)
   (keystore 0600 en `/home/lab-master/stockgap-buyer/.studio/wallets/`, password
   0600 en su `.env.local`; **sin fondos todavía**). Vendedora intacta
   `0x60EAB5FbE65f88abbc5EF49BEac52b4d7Cb8e079`.

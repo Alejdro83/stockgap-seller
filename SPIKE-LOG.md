@@ -1,6 +1,6 @@
 # SPIKE-LOG — Bloque 0 (Spike) StockGap Agent Studio
 
-Fecha: **2026-10-07 (UTC)** · Repo: `/home/lab-master/stockgap-seller` (git local, commit `9a0c9f3`, **sin push a ningún remote**) · Duración total ≈ 2h10m (timebox 4h) · Todo TESTNET (chain 97). Cero acciones mainnet, cero fondos reales.
+Fecha: **2026-10-07 (UTC)** · Repo: `/home/lab-master/stockgap-seller` (git local, commit `9a0c9f3`, pusheado después a `origin/main`) · Duración total ≈ 2h10m (timebox 4h) · Spike en TESTNET (chain 97; la identidad mainnet 365285 se registró después, ver docs/BLOQUE2-LOG.md). Cero acciones mainnet, cero fondos reales.
 
 ---
 
