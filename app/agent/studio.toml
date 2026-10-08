@@ -17,7 +17,7 @@ runtime = "agentcore"
 protocols = ["MCP","X402"]
 
 [network]
-default = "bsc-testnet"
+default = "bsc-mainnet"
 
 [wallet]
 # Local keystore signer. The Agent is the SOLE key-holder/signer.
@@ -48,11 +48,11 @@ allowed_payment_tokens = ["U","USDC","USDT"]
 # economy (price_usd = "0.10" + mainnet assets/network) is restored in
 # Bloque 3's mainnet switch for the payment demo — one config line + redeploy
 # of THIS service (stockgap-app is never touched).
-price_usd = "0"
+price_usd = "0.10"
 # 使用当前网络的 canonical AssetId；顺序会保留，允许改为任意非空子集。
 # 这里只列出当前 ERC-8183 合约栈能托管的资产。要卖更多币种，需要指向
 # 支持多 token 的部署（同时设置三个 ERC8183_*_ADDRESS），再把资产加回来。
-assets = ["TEST_U","TEST_USDC","TEST_USDT"]
+assets = ["U"]   # chain 56: the ERC-8183 stack settles in U (United Stables) only
 
 [payments.erc8183]
 # Seller 价格与资产来自 [payments.seller]；本表只保留 ERC-8183 行为参数。
@@ -83,5 +83,5 @@ work_timeout_seconds = 60
 [identity]
 endpoint = "https://http--stockgap-seller--6h2d2gps9lkr.code.run/mcp"
 registered_at = "2026-10-07T04:16:53.427Z"
-agent_id = 2572
-last_register_tx = "0x0a89ca5bab0b7ad0c191f24a32fdc076d6bfd01e56b972d529213e973b1a126c"
+agent_id = 365285   # BSC mainnet ERC-8004 (testnet dev id was 2572)
+last_register_tx = "0x0a89ca5bab0b7ad0c191f24a32fdc076d6bfd01e56b972d529213e973b1a126c"   # TESTNET tx (2572); the mainnet registration tx is not recorded yet
