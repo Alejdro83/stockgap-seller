@@ -29,6 +29,14 @@ The paid rail is **ERC-8183** (the `/x402` route is dormant: no B402 merchant cr
 
 Job **56937** on BSC mainnet: a real 0.10 U payment through this agent, delivered and hashed on-chain. Hashes and the honest log of what failed first: [docs/evidence/mainnet-job-56937](./docs/evidence/mainnet-job-56937/NOTES.md). Settlement is optimistic (about 7 days), so the funds are still in escrow.
 
+## Current status (honest)
+
+- The deployed seller runs on **BSC mainnet** (`price_usd = "0.10"`, asset U). One real job was paid through it and delivered (job 56937, above).
+- The job is **not settled**: the buyer can settle only after the optimistic dispute window (~7 days), so the 0.10 U is still in escrow.
+- `/x402` is dormant (no B402 merchant credentials); payments use ERC-8183 only.
+- Deliverables are stored on the container's local disk and are served by `/erc8183/job/<id>/response`; they do not survive a redeploy.
+- StockGap's own x402 gate has a separate mainnet pay-per-call run: [`docs/evidence/prueba2`](https://github.com/Alejdro83/stockgap-agent/tree/master/docs/evidence/prueba2).
+
 ## Layout
 
 - `app/agent/` — the agent and sole on-chain signer (TypeScript, `src/`; `sellerCore.runWork` builds the report).
