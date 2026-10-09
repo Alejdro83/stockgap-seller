@@ -781,6 +781,41 @@ async function main(): Promise<void> {
     res.status(200).json({ ok: true });
   });
 
+  // REST face of `negotiate` for ERC-8183 buyers that arrive through the
+  // ERC-8004 identity (`bag erc8183 buy --agent-id`): they POST
+  // {endpoint}/negotiate. Same deterministic, rate-limited signQuote as the
+  // MCP tool; no LLM in the quote path.
+  app.post("/erc8183/negotiate", async (req, res) => {
+    const body = req.body as Record<string, unknown> | undefined;
+    const task = body?.task_description;
+    const terms = body?.terms;
+    if (
+      typeof task !== "string" ||
+      task.length === 0 ||
+      task.length > 4000 ||
+      (terms !== undefined &&
+        (typeof terms !== "object" || terms === null || Array.isArray(terms)))
+    ) {
+      res.status(400).json({ error: "invalid negotiation request" });
+      return;
+    }
+    try {
+      await limitCommerceOperation("negotiate");
+      const quote = await signing.signQuote({
+        task_description: task,
+        terms: (terms as Record<string, unknown> | undefined) ?? {},
+      });
+      res.status(200).json(quote);
+    } catch (e) {
+      if (isCommerceRateLimitError(e)) {
+        res.status(429).json({ error: "seller rate limit exceeded" });
+        return;
+      }
+      log.error("negotiate (REST) failed", e);
+      res.status(503).json({ error: "seller operation failed; retry later" });
+    }
+  });
+
   // Public, read-only deliverable publication for ERC-8183 (see
   // deliverableRoute.ts). Reachable at ERC8183_AGENT_URL/job/:id/response.
   app.get("/erc8183/job/:id/response", async (req, res) => {
