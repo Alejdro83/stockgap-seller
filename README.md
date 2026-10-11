@@ -35,6 +35,7 @@ Job **56937** on BSC mainnet: a real 0.10 U payment through this agent, delivere
 - The job is **not settled**: the buyer can settle only after the optimistic dispute window (~7 days), so the 0.10 U is still in escrow.
 - `/x402` is dormant (no B402 merchant credentials); payments use ERC-8183 only.
 - Deliverables are stored on the container's local disk and are served by `/erc8183/job/<id>/response`; they do not survive a redeploy.
+- Because of that, the live URL for job 56937 (`/erc8183/job/56937/response`) now returns 404 after a redeploy. The canonical copy of that deliverable is [`docs/evidence/mainnet-job-56937/deliverable.json`](./docs/evidence/mainnet-job-56937/deliverable.json); the job notes in the same folder list the on-chain transactions and the recorded deliverable hash.
 - StockGap's own x402 gate has a separate mainnet pay-per-call run: [`docs/evidence/prueba2`](https://github.com/Alejdro83/stockgap-agent/tree/master/docs/evidence/prueba2).
 
 ## Layout
